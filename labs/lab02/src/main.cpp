@@ -16,6 +16,8 @@
 #include "ply.h"
 #include <GL/glui.h>
 
+void resetKeys();
+
 float xy_aspect;
 int   last_x, last_y;
 float rotationX = 0.0;
@@ -32,6 +34,7 @@ float zoom = 1.0;
 
 int   show_ply=1;
 int   show_axes = 1;
+int   show_cursor = 1;
 
 float ply_rotate[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
 float view_rotate[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
@@ -39,17 +42,15 @@ float obj_pos[] = { 0.0, 0.0, 0.0 };
 float cam_pos[] = {0.0,0.0,-1.0};
 int   curr_string = 0;
 
+bool pressedKey_table[256];
+bool isShiftPressed = false;
+
 /** Pointers to the windows and some of the controls we'll create **/
 GLUI *glui;
 GLUI *glui2;
 GLUI_Spinner    *light0_spinner;
 GLUI_RadioGroup *radio;
 GLUI_Panel      *obj_panel;
-
-/* ====================
-PLY Model
-======================*/
-ply* myPLY;
 
 /********** User IDs for callbacks ********/
 #define LIGHT0_ENABLED_ID    200
@@ -67,6 +68,37 @@ GLfloat light0_diffuse[] =  {.6f, .6f, 1.0f, 1.0f};
 GLfloat light0_position[] = {.5f, .5f, 1.0f, 0.0f};
 
 GLfloat lights_rotation[16] = {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
+
+/* This is a textbox that we can edit, we
+	use it to
+*/
+GLUI_EditText* filenameTextField = NULL;
+string filenamePath = "./data/bunny.ply";
+
+/* ====================
+PLY Model
+======================*/
+ply* myPLY = new ply (filenamePath);
+
+
+/*   ==========================================
+	 Callback function
+	 A callback function is a function that is triggered
+	 by some operating system event (like clicking a button)
+	 and then running this function when an action has occurred.
+  	 ========================================== */
+void callback_load(int id) {
+
+	if (filenameTextField == NULL) {
+		return;
+	}
+	//
+	cout << "Loading new ply file from: " << filenameTextField->get_text() << endl;
+	// Reload our model
+	myPLY->reload(filenameTextField->get_text());
+	// Print out the attributes
+	myPLY->printAttributes();
+}
 
 /**************************************** control_cb() *******************/
 /* GLUI control callback                                                 */
@@ -142,48 +174,84 @@ void myGlutMouse(int button, int button_state, int x, int y )
 
 }
 
-/**************************************** myGlutKeyboard() **********/
+// Up and down functions for setting table state
 
-/*
-
-            Implement some Keyboard functions here
-
-            Add in 'w','a','s','d' movement
-            Add other keyboard buttons to do neat things
-
-*/
-
-void myGlutKeyboard(unsigned char Key, int x, int y)
+void keySpecialUp(int Key, int x, int y)
 {
-    switch(Key)
-    {
-        case 27:
-        case 'q':
-            exit(0);
-            break;
-
-        case 'w':
-        //view_rotate[0] = view_rotate[0] + 0.1f;
-        //view_rotate[1] = view_rotate[1] + 0.1f;
-        //view_rotate[2] = view_rotate[2] + 0.1f;
-        //view_rotate[3] = view_rotate[3] + 0.1f;
-        //  cam_pos[2] = cam_pos[2] + 0.01f;
-        for (int i = 0; i < 16; i++) {
-          printf("%f ", view_rotate[i]);
-        }
-        printf("\n");
-          break;
-    };
-
-    glutPostRedisplay();
+  fprintf(stderr, "Special Key: %d up\n", Key, Key);
 }
 
-
-/***************************************** myGlutMenu() ***********/
-
-void myGlutMenu( int value )
+void keySpecialDown(int Key, int x, int y)
 {
-    myGlutKeyboard( value, 0, 0 );
+  fprintf(stderr, "Special Key: %d down\n", Key, Key);
+
+}
+
+void keyUp(unsigned char Key, int x, int y)
+{
+  (void)x;
+  (void)y;
+  fprintf(stderr, "Key: %c, %d up\n", Key, Key);
+  pressedKey_table[Key] = false;
+  isShiftPressed = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
+}
+
+void keyDown(unsigned char Key, int x, int y)
+{
+  (void)x;
+  (void)y;
+  fprintf(stderr, "Key: %c, %d down\n", Key, Key);
+  pressedKey_table[Key] = true;
+  isShiftPressed = (glutGetModifiers() & GLUT_ACTIVE_SHIFT);
+}
+
+void doKeyPress()
+{
+    if (pressedKey_table['q']) {
+      exit(0);
+    }
+
+    // these... kinda work
+    if (pressedKey_table['w']) {
+      cam_pos[0] += view_rotate[8] * -0.01;
+      cam_pos[1] += view_rotate[9] * -0.01;
+      cam_pos[2] += view_rotate[10] * 0.01;
+    }
+    if (pressedKey_table['s']) {
+      cam_pos[0] += view_rotate[8] * 0.01;
+      cam_pos[1] += view_rotate[9] * 0.01;
+      cam_pos[2] += view_rotate[10] * -0.01;
+    }
+    if (pressedKey_table['a']) {
+      cam_pos[0] += view_rotate[0] * 0.01;
+      cam_pos[1] += view_rotate[1] * -0.01;
+      cam_pos[2] += view_rotate[2] * -0.01;
+    }
+    if (pressedKey_table['d']) {
+      cam_pos[0] += view_rotate[0] * -0.01;
+      cam_pos[1] += view_rotate[1] * 0.01;
+      cam_pos[2] += view_rotate[2] * 0.01;
+    }
+
+    // reset in case bad stuff happens
+    if (pressedKey_table['r']) {
+      resetKeys();
+    }
+
+    // space
+    if (pressedKey_table[32]) {
+       if(isShiftPressed) {
+         cam_pos[0] += view_rotate[4] * -0.01;
+         cam_pos[1] += view_rotate[5] * 0.01;
+         cam_pos[2] += view_rotate[6] *  0.01;
+       } else {
+         cam_pos[0] += view_rotate[4] * 0.01;
+         cam_pos[1] += view_rotate[5] * -0.01;
+         cam_pos[2] += view_rotate[6] * -0.01;
+       }
+    }
+
+    glutPostRedisplay();
 }
 
 
@@ -248,23 +316,6 @@ void drawAxes( float scale )
 {
     glDisable( GL_LIGHTING );
 
-    glPushMatrix();
-        glScalef( scale, scale, scale );
-
-        glBegin( GL_LINES );
-            glColor3f( 1.0, 0.0, 0.0 );
-            glVertex3f( .8f, 0.05f, 0.0 );  glVertex3f( 1.0, 0.25f, 0.0 ); /* Letter X */
-            glVertex3f( 0.8f, .25f, 0.0 );  glVertex3f( 1.0, 0.05f, 0.0 );
-            glVertex3f( 0.0, 0.0, 0.0 );  glVertex3f( 1.0, 0.0, 0.0 ); /* X axis      */
-
-            glColor3f( 0.0, 1.0, 0.0 );
-            glVertex3f( 0.0, 0.0, 0.0 );  glVertex3f( 0.0, 1.0, 0.0 ); /* Y axis      */
-
-            glColor3f( 0.0, 0.0, 1.0 );
-            glVertex3f( 0.0, 0.0, 0.0 );  glVertex3f( 0.0, 0.0, 1.0 ); /* Z axis    */
-        glEnd();
-    glPopMatrix();
-
     // Draw a grid under the object
     float gridSize = 1.0f;
     float halfGridSize = gridSize * 0.5;
@@ -281,7 +332,37 @@ void drawAxes( float scale )
             glVertex3f( -halfGridSize, 0.0, halfGridSize );  glVertex3f( halfGridSize, 0.0, halfGridSize ); /* X axis grid */
             glVertex3f( halfGridSize, 0.0, -halfGridSize );  glVertex3f( halfGridSize, 0.0, halfGridSize ); /* X axis grid */
         glEnd();
+
+      glPushMatrix();
+          glScalef( scale, scale, scale );
+
+          glBegin( GL_LINES );
+              glColor3f( 1.0, 0.0, 0.0 );
+              // glVertex3f( .8f, 0.05f, 0.0 );  glVertex3f( 1.0, 0.25f, 0.0 ); /* Letter X */
+              // glVertex3f( 0.8f, .25f, 0.0 );  glVertex3f( 1.0, 0.05f, 0.0 );
+              glVertex3f( 0.0, 0.0, 0.0 );  glVertex3f( 1.0, 0.0, 0.0 ); /* X axis      */
+
+              glColor3f( 0.0, 1.0, 0.0 );
+              glVertex3f( 0.0, 0.0, 0.0 );  glVertex3f( 0.0, 1.0, 0.0 ); /* Y axis      */
+
+              glColor3f( 0.0, 0.0, 1.0 );
+              glVertex3f( 0.0, 0.0, 0.0 );  glVertex3f( 0.0, 0.0, 1.0 ); /* Z axis    */
+          glEnd();
+      glPopMatrix();
+
     glEnable( GL_LIGHTING );
+}
+
+/* drawCursor */
+// Draws cursor, always in center of screen
+void drawCursor() {
+  glDisable( GL_LIGHTING );
+  glBegin(GL_LINES);
+    glColor3f(1.0, 0, 1.0);
+    glVertex2d(-0.5, 0);  glVertex2d(0.5, 0);
+    glVertex2d(0, -0.5);  glVertex2d(0, 0.5);
+  glEnd();
+  glEnable( GL_LIGHTING );
 }
 
 
@@ -289,6 +370,8 @@ void drawAxes( float scale )
 
 void myGlutDisplay( void )
 {
+    doKeyPress();
+
     // Clear the buffer of colors in each bit plane.
     // bit plane - A set of bits that are on or off (Think of a black and white image)
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -354,16 +437,32 @@ void myGlutDisplay( void )
 
     glPopMatrix();
 
+    // draw last, over everything
+    if (show_cursor) {
+      glPushMatrix();
+      glLoadIdentity();
+      drawCursor();
+      glPopMatrix();
+    }
 
     // swap the back and front buffers to draw an updated image.
     glutSwapBuffers();
 }
 
+void resetKeys() {
+  for (int k = 0; k < 256; k++) {
+    pressedKey_table[k] = false;
+  }
+  isShiftPressed = false;
+}
 
 /**************************************** main() ********************/
 
 int main(int argc, char* argv[])
 {
+    // initialize our table of key presses
+    resetKeys();
+
     /****************************************/
     /*   Initialize GLUT and create window  */
     /****************************************/
@@ -376,8 +475,14 @@ int main(int argc, char* argv[])
     main_window = glutCreateWindow( "User Interaction - InClass Assignment 2" );
     glutDisplayFunc( myGlutDisplay );
     GLUI_Master.set_glutReshapeFunc( myGlutReshape );
-    GLUI_Master.set_glutKeyboardFunc( myGlutKeyboard );
-    GLUI_Master.set_glutSpecialFunc( NULL );
+
+    glutIgnoreKeyRepeat( true ); // we will keep track of up and down ourselves
+    //GLUI_Master.set_glutKeyboardFunc( myGlutKeyboard );
+    glutKeyboardFunc(keyDown);
+    glutKeyboardUpFunc(keyUp);
+    glutSpecialFunc(keySpecialDown);
+    glutSpecialUpFunc(keySpecialUp);
+
     GLUI_Master.set_glutMouseFunc( myGlutMouse );
     glutMotionFunc( myGlutMotion );
 
@@ -427,6 +532,10 @@ int main(int argc, char* argv[])
     /*** Create the side subwindow ***/
     glui = GLUI_Master.create_glui_subwindow( main_window, GLUI_SUBWINDOW_RIGHT );
 
+    filenameTextField = new GLUI_EditText(glui, "Filename:", filenamePath);
+    filenameTextField->set_w(300);
+    glui->add_button("Load PLY", 0, callback_load);
+
     obj_panel = new GLUI_Rollout(glui, "Properties", true );
 
     /***** Control for object params *****/
@@ -462,6 +571,7 @@ int main(int argc, char* argv[])
     GLUI_Rollout *options = new GLUI_Rollout(glui, "Options", true );
 
     new GLUI_Checkbox( options, "Draw PLY", &show_ply );
+    new GLUI_Checkbox( options, "Draw Cursor", &show_cursor );
     new GLUI_Checkbox( options, "Draw Axes and Grid", &show_axes );
 
     /*** Disable/Enable buttons ***/
@@ -505,10 +615,6 @@ int main(int argc, char* argv[])
     /**** We register the idle callback with GLUI, *not* with GLUT ****/
     GLUI_Master.set_glutIdleFunc( myGlutIdle );
 #endif
-
-
-    // Load our model
-    myPLY = new ply("./bunny.ply");
 
     /**** Regular GLUT main loop ****/
 

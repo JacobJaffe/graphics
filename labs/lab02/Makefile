@@ -1,2 +1,2 @@
 build:
-	g++ -Wall -Wextra main.cpp solarSystem.cpp -I/Library/Frameworks/GLUI.framework/Headers/ -framework OpenGL -framework GLUT -lglui -Wno-deprecated -o lab03
+	g++ -Wall -Wextra ./src/main.cpp ./src/ply.cpp ./src/entity.cpp -I/Library/Frameworks/GLUI.framework/Headers/ -framework OpenGL -framework GLUT -lglui -Wno-deprecated -o lab02
