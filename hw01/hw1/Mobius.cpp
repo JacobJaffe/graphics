@@ -28,6 +28,8 @@ void Mobius::draw() {
  glEnd();
 }
 
+
+// TODO: this is awful code, but is a nice proof of concept.
 void Mobius::drawNormal() {
   Point p1;
   Point p2;
