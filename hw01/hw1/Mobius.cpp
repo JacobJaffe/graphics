@@ -12,7 +12,7 @@ void Mobius::draw() {
 // mostly working on fixing that code, cause it didn't exactly... work.
 
 // TODO: look into doing this with matrix transformations?!
- for(float a = 0; a < 2.1 * PI; a += 0.05)
+ for(float a = 0; a < 2.1 * PI; a += 2.1 / (m_segmentsX / 2))
  {
    for(float r = -1; r <= 1; r += 2)
    {
@@ -26,4 +26,72 @@ void Mobius::draw() {
  }
 
  glEnd();
+}
+
+void Mobius::drawNormal() {
+  Point p1;
+  Point p2;
+  Point p3;
+   for(float a = 0; a < 2.1 * PI; a += 2.1 / (m_segmentsX / 2))
+   {
+
+     // glNormal3dv(normal.unpack());
+     for(float r = -1; r <= 1; r += 2)
+     {
+       glBegin(GL_LINES);
+       glColor3f(1.0, 0.0, 0.0);
+        Point p = Point();
+        p[0] = cos(a)* ( 1+ (r/2 * cos(a/2)) );
+        p[1] = sin(a)* ( 1+ (r/2 * cos(a/2)) );
+        p[2] = r/2 *sin(a/2);
+
+        p3 = Point(p1);
+        if (r == -1) {
+          p1 = Point(p);
+        } else {
+          p2 = Point(p);
+        }
+
+        Vector v1 = p2 - p1;
+        Vector v2 = p3 - p1;
+        Vector normal = cross(v1, v2);
+        normal.normalize();
+
+        glVertex3dv(p.unpack());
+        glVertex3dv((p + normal / 10).unpack());
+        glEnd();
+     }
+   }
+
+   for(float a = 0; a < 2.1 * PI; a += 2.1 / (m_segmentsX / 2))
+   {
+
+     // glNormal3dv(normal.unpack());
+     for(float r = -1; r <= 1; r += 2)
+     {
+       glBegin(GL_LINES);
+       glColor3f(1.0, 0.0, 0.0);
+        Point p = Point();
+        p[0] = cos(a)* ( 1+ (r/2 * cos(a/2)) );
+        p[1] = sin(a)* ( 1+ (r/2 * cos(a/2)) );
+        p[2] = r/2 *sin(a/2);
+
+        p3 = Point(p1);
+        if (r == 1) {
+          p1 = Point(p);
+        } else {
+          p2 = Point(p);
+        }
+
+        Vector v1 = p2 - p1;
+        Vector v2 = p3 - p1;
+        Vector normal = cross(v1, v2);
+        normal.normalize();
+        normal = normal * -1;
+
+        glVertex3dv(p.unpack());
+        glVertex3dv((p + normal / 10).unpack());
+        glEnd();
+     }
+   }
 }

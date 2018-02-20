@@ -11,7 +11,7 @@ public:
 
 	void draw();
 
-	void drawNormal(){};
+	void drawNormal();
 };
 
 #endif
