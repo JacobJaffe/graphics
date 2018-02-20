@@ -12,7 +12,7 @@ void Mobius::draw() {
 // mostly working on fixing that code, cause it didn't exactly... work.
 
 // TODO: look into doing this with matrix transformations?!
- for(float a = 0; a < 2.1 * PI; a += 2.1 / (m_segmentsX / 2))
+ for(float a = 0; a < 2.0 * PI; a += 2.0 / (m_segmentsX / 2))
  {
    for(float r = -1; r <= 1; r += 2)
    {
@@ -25,11 +25,34 @@ void Mobius::draw() {
    }
  }
 
+// connect back to start
+/* gotta go in reverse here cause it has flipped */
+float a = 0;
+float r = 1;
+  {
+     Point p = Point();
+     p[0] = cos(a)* ( 1+ (r/2 * cos(a/2)) );
+     p[1] = sin(a)* ( 1+ (r/2 * cos(a/2)) );
+     p[2] = r/2 *sin(a/2);
+
+     glVertex3dv(p.unpack());
+  }
+
+r = -1;
+   {
+      Point p = Point();
+      p[0] = cos(a)* ( 1+ (r/2 * cos(a/2)) );
+      p[1] = sin(a)* ( 1+ (r/2 * cos(a/2)) );
+      p[2] = r/2 *sin(a/2);
+
+      glVertex3dv(p.unpack());
+   }
+
  glEnd();
 }
 
 
-// TODO: this is awful code, but is a nice proof of concept.
+// TODO: this is awful code, but is a nice proof of concept
 void Mobius::drawNormal() {
   Point p1;
   Point p2;
