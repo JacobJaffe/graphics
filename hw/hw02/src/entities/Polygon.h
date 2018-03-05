@@ -56,8 +56,8 @@ public:
     Vector normalVector = cross(vY, vX);
     normalVector.normalize();
 
-		// TODO: Fix
-			normalVector = -normalVector;
+		// // TODO: Fix
+		// 	normalVector = -normalVector;
     glNormal3dv(normalVector.unpack());
 
     for (int i = 0; i < m_segmentsX; i ++) {

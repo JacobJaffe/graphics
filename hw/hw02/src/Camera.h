@@ -50,5 +50,9 @@ private:
   Vector _upVector;
   Vector _lookVector;
 
+  double _rotateV;
+  double _rotateU;
+  double _rotateW;
+
 };
 #endif

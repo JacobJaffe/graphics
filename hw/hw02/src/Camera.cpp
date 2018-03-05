@@ -33,8 +33,8 @@ Matrix Camera::GetProjectionMatrix() {
 	// 2) Perspective unhinging Matrix
 	Matrix M;
 	M[10] = (-1 / (c + 1));
-	M[11] = (c / (c + 1));
-	M[14] = -1;
+	M[14] = (c / (c + 1));
+	M[11] = -1;
 	M[15] = 0;
 
 	Matrix ProjectionMatrix = M * S;
@@ -64,9 +64,9 @@ void Camera::SetScreenSize (int screenWidth, int screenHeight) {
 Matrix Camera::GetModelViewMatrix() {
 	// 1) Transform Matrix
 	Matrix T; // identity
-	T[3] = -_eyePoint[0];
-	T[7] = -_eyePoint[1];
-	T[11] = -_eyePoint[2];
+	T[12] = -_eyePoint[0];
+	T[13] = -_eyePoint[1];
+	T[14] = -_eyePoint[2];
 
 	// 2) Rotation Matrix
 	Matrix R;
@@ -83,31 +83,60 @@ Matrix Camera::GetModelViewMatrix() {
 
 	// now fill rotation Matrix
 	R[0] = u[0];
-	R[1] = u[1];
-	R[2] = u[2];
+	R[4] = u[1];
+	R[8] = u[2];
 
-	R[4] = v[0];
+	R[1] = v[0];
 	R[5] = v[1];
-	R[6] = v[2];
+	R[9] = v[2];
 
-	R[8] = w[0];
-	R[9] = w[1];
+	R[2] = w[0];
+	R[6] = w[1];
 	R[10] = w[2];
+
+	// 3) now adjust rotation for the Spin, Pitch, and  Yaw
+		// i. Spin
+		Matrix R_spin;
+		double Spin_angle_radians = _rotateW * PI / 180.0;
+		R_spin[0] = cos(Spin_angle_radians);
+		R_spin[4] = -sin(Spin_angle_radians);
+		R_spin[1] = sin(Spin_angle_radians);
+		R_spin[5] = cos(Spin_angle_radians);
+
+		// ii. Pitch
+		Matrix R_pitch;
+		double Pitch_angle_radians = _rotateU * PI / 180.0 * -1;
+		R_pitch[5] = cos(Pitch_angle_radians);
+		R_pitch[9] = -sin(Pitch_angle_radians);
+		R_pitch[6] = sin(Pitch_angle_radians);
+		R_pitch[10] = cos(Pitch_angle_radians);
+
+		// iii. R_yaw
+		Matrix R_yaw;
+		double Yaw_angle_radians = _rotateV * PI / 180.0 * -1;
+		R_yaw[0] = cos(Yaw_angle_radians);
+		R_yaw[8] = sin(Yaw_angle_radians);
+		R_yaw[2] = -sin(Yaw_angle_radians);
+		R_yaw[10] = cos(Yaw_angle_radians);
+
+		R = R_yaw * R;
+		R = R_pitch * R;
+		R = R_spin * R;
 
 	Matrix V = R * T;
 	return V;
 }
 
-// TODO
 void Camera::RotateV(double angle) {
+	_rotateV = angle;
 }
 
-// TODO
 void Camera::RotateU(double angle) {
+	_rotateU = angle;
 }
 
-// TODO
 void Camera::RotateW(double angle) {
+	_rotateW = angle;
 }
 
 // TODO

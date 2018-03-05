@@ -105,8 +105,8 @@ void Circle::draw() {
 }
 
 void Circle::draw(Vector &normalVector) {
-  // TODO: Fix
-  normalVector = -normalVector;
+  // // TODO: Fix
+  // normalVector = -normalVector;
   glNormal3dv(normalVector.unpack());
   glBegin(GL_TRIANGLE_FAN);
      glVertex3dv(origin.unpack());
@@ -136,8 +136,8 @@ void Circle::drawConnectCircleSlope(Circle &otherCircle) {
     Vector normalVector = cross (tangentVector, slopeVector);
     normalVector.normalize();
 
-    // TODO: fix this
-    normalVector = -normalVector;
+    // // TODO: fix this
+    // normalVector = -normalVector;
     glNormal3dv(normalVector.unpack());
 
      // draw each vertex
@@ -163,9 +163,9 @@ void Circle::drawConnectCircleCurved(Circle &otherCircle, Point &center) {
     normalVector1.normalize();
     normalVector2.normalize();
 
-    // TODO: Fix
-    normalVector2 = -normalVector2;
-    normalVector1 = -normalVector1;
+    // // TODO: Fix
+    // normalVector2 = -normalVector2;
+    // normalVector1 = -normalVector1;
 
     glNormal3dv(normalVector1.unpack());
     glVertex3dv(p1.unpack());
@@ -195,8 +195,8 @@ void Circle::drawConnectPoint(Point &tip) {
       Vector normalVector = cross (tangentVector, slopeVector);
       normalVector.normalize();
 
-      // TODO: Fix
-      normalVector = -normalVector;
+      // // TODO: Fix
+      // normalVector = -normalVector;
       glNormal3dv(normalVector.unpack());
 
       glVertex3dv(p1.unpack());
@@ -210,8 +210,8 @@ void Circle::drawConnectPointCurved(Point &tip, Point &curveOrigin) {
 
     // normal for the point
 
-    // TODO: Fix
-    pointNormal = -pointNormal;
+    // // TODO: Fix
+    // pointNormal = -pointNormal;
     glNormal3dv(pointNormal.unpack());
 
     // Connect to the point
@@ -223,8 +223,8 @@ void Circle::drawConnectPointCurved(Point &tip, Point &curveOrigin) {
       Vector normalVector = p1 - curveOrigin;
       normalVector.normalize();
 
-      // TODO: Fix
-      normalVector = -normalVector;
+      // // TODO: Fix
+      // normalVector = -normalVector;
       glNormal3dv(normalVector.unpack());
 
       glVertex3dv(p1.unpack());
