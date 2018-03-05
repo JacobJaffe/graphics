@@ -17,9 +17,6 @@ enum OBJ_TYPE {
 	SHAPE_SPECIAL3 = 6
 };
 
-// FOR FIXING THE NORMALS
-int FLIP_NORMALS = 0;
-
 /** These are the live variables passed into GLUI ***/
 int  wireframe = 1;
 int  fill = 1;
@@ -57,10 +54,47 @@ Sphere* sphere = new Sphere();
 Mobius* mobius = new Mobius();
 Shape* shape = cube;
 Camera* camera = new Camera();
+
+void print_viewMatrix(int id) {
+	(void)id; // for GLUI_CB
+	Matrix modelView = camera->GetModelViewMatrix();
+	fprintf(stderr, "ViewMatrix:\n");
+	for (int i = 0; i < 16; i++) {
+		if ((i!=0) && (i % 4 == 0)) {
+			fprintf(stderr, "\n");
+		}
+	  if (i < 10) {
+			fprintf(stderr, "ViewMatrix[%d]:  %f\n", i, modelView[i]);
+		} else {
+			fprintf(stderr, "ViewMatrix[%d]: %f\n", i, modelView[i]);
+		}
+	}
+	fprintf(stderr, "END ViewMatrix\n\n");
+}
+
+void print_projectionMatrix(int id) {
+	(void)id; // for GLUI_CB
+	Matrix modelView = camera->GetProjectionMatrix();
+	fprintf(stderr, "ProjectionMatrix:\n");
+	for (int i = 0; i < 16; i++) {
+		if ((i!=0) && (i % 4 == 0)) {
+			fprintf(stderr, "\n");
+		}
+	  if (i < 10) {
+			fprintf(stderr, "ProjectionMatrix[%d]:  %f\n", i, modelView[i]);
+		} else {
+			fprintf(stderr, "ProjectionMatrix[%d]: %f\n", i, modelView[i]);
+		}
+	}
+	fprintf(stderr, "END ProjectionMatrix\n\n");
+}
+
+
 //
 // /***************************************** callback_obj() ***********/
 
 void callback_obj(int id) {
+	(void)id; // for GLUI_CB
 	switch (objType) {
 	case SHAPE_CUBE:
 		shape = cube;
@@ -123,6 +157,7 @@ void myGlutDisplay(void)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	Matrix projection = camera->GetProjectionMatrix();
+
 	glMultMatrixd(projection.unpack());
 
 
@@ -268,7 +303,6 @@ int main(int argc, char* argv[])
 		->set_int_limits(3, 60);
 	(new GLUI_Spinner(render_panel, "Segments Y:", &segmentsY))
 		->set_int_limits(3, 60);
-	new GLUI_Checkbox(render_panel, "FLIP NORMALS", &FLIP_NORMALS);
 
 	GLUI_Panel *camera_panel = glui->add_panel("Camera");
 	(new GLUI_Spinner(camera_panel, "RotateV:", &camRotV))
@@ -320,6 +354,9 @@ int main(int argc, char* argv[])
 		->set_int_limits(0, 359);
 	(new GLUI_Spinner(object_panel, "Scale:", &scale))
 		->set_int_limits(1, 100);
+
+	glui->add_button("Print ViewMatrix", 0, (GLUI_CB)print_viewMatrix);
+	glui->add_button("Print ProjectionMatrix", 0, (GLUI_CB)print_projectionMatrix);
 
 	glui->add_button("Quit", 0, (GLUI_Update_CB)exit);
 
