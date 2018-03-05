@@ -26,7 +26,7 @@ Matrix Camera::GetProjectionMatrix() {
 	// 1) Scaling Matrix
 	Matrix S;
 	double radians = _viewAngle * PI / 180;
-	S[0] = (double(1.0) / (_farPlane * tan(radians / 2)));
+	S[0] = (double(1.0) / (GetScreenWidthRatio() * _farPlane * tan(radians / 2)));
 	S[5] = (double(1.0) / (_farPlane * tan(radians / 2)));
 	S[10] = (double(1.0) / _farPlane);
 
