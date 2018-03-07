@@ -21,6 +21,25 @@ void Camera::Orient(Point& eye, Vector& look, Vector& up) {
 
 // TODO
 Matrix Camera::GetProjectionMatrix() {
+
+	// Orthogonal ??
+	// https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/orthographic-projection-matrix
+	Matrix M_orthogonal;
+	double r = _screenWidth;
+	double l = -10.0;
+	double t = _screenHeight;
+	double b = -10.0;
+	double f = _farPlane;
+	double n = _nearPlane;
+	M_orthogonal[0] = (double(2.0) / (r - l));
+	M_orthogonal[5] = (double(2.0) / (t - b));
+	M_orthogonal[10] = (double(1.0) / (f - n));
+
+	M_orthogonal[12] = - ((r + l) / (r - l));
+	M_orthogonal[13] = - ((t + b) / (t - b));
+	M_orthogonal[14] = - ((f + n) / (f - n));
+	return M_orthogonal;
+
 	double c = -_nearPlane / _farPlane;
 
 	// 1) Scaling Matrix
@@ -105,7 +124,7 @@ Matrix Camera::GetModelViewMatrix() {
 
 		// ii. Pitch
 		Matrix R_pitch;
-		double Pitch_angle_radians = _rotateU * PI / 180.0 * -1;
+		double Pitch_angle_radians = _rotateU * PI / 180.0 * -1; // -1, because we want counter clockwise pitch
 		R_pitch[5] = cos(Pitch_angle_radians);
 		R_pitch[9] = -sin(Pitch_angle_radians);
 		R_pitch[6] = sin(Pitch_angle_radians);
@@ -113,7 +132,7 @@ Matrix Camera::GetModelViewMatrix() {
 
 		// iii. R_yaw
 		Matrix R_yaw;
-		double Yaw_angle_radians = _rotateV * PI / 180.0 * -1;
+		double Yaw_angle_radians = _rotateV * PI / 180.0 * -1; // -1, because we want counter clockwise yaw
 		R_yaw[0] = cos(Yaw_angle_radians);
 		R_yaw[8] = sin(Yaw_angle_radians);
 		R_yaw[2] = -sin(Yaw_angle_radians);

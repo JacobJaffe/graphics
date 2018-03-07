@@ -305,11 +305,11 @@ int main(int argc, char* argv[])
 		->set_int_limits(3, 60);
 
 	GLUI_Panel *camera_panel = glui->add_panel("Camera");
-	(new GLUI_Spinner(camera_panel, "RotateV:", &camRotV))
+	(new GLUI_Spinner(camera_panel, "Yaw:", &camRotV))
 		->set_int_limits(-179, 179);
-	(new GLUI_Spinner(camera_panel, "RotateU:", &camRotU))
+	(new GLUI_Spinner(camera_panel, "Pitch:", &camRotU))
 		->set_int_limits(-179, 179);
-	(new GLUI_Spinner(camera_panel, "RotateW:", &camRotW))
+	(new GLUI_Spinner(camera_panel, "Spin:", &camRotW))
 		->set_int_limits(-179, 179);
 	(new GLUI_Spinner(camera_panel, "Angle:", &viewAngle))
 		->set_int_limits(1, 179);
