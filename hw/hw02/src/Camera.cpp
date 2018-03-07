@@ -24,6 +24,7 @@ Matrix Camera::GetProjectionMatrix() {
 
 	// Orthogonal ??
 	// https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/orthographic-projection-matrix
+/*
 	Matrix M_orthogonal;
 	double r = _screenWidth;
 	double l = -10.0;
@@ -39,7 +40,7 @@ Matrix Camera::GetProjectionMatrix() {
 	M_orthogonal[13] = - ((t + b) / (t - b));
 	M_orthogonal[14] = - ((f + n) / (f - n));
 	return M_orthogonal;
-
+*/
 	double c = -_nearPlane / _farPlane;
 
 	// 1) Scaling Matrix
