@@ -4,7 +4,7 @@ build:
 
 
 	g++ -Wall -Wextra \
-		./src/*.cpp  ./src/entities/*.cpp\
+		./*.cpp  ./entities/*.cpp\
 		-I/Library/Frameworks/GLUI.framework/Headers/ \
 		-framework OpenGL \
 		-framework GLUT -lglui -Wno-deprecated \

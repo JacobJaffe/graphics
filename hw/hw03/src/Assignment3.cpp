@@ -34,7 +34,7 @@ float lookZ = -2;
 
 /** These are GLUI control panel objects ***/
 int  main_window;
-string filenamePath = "data\\general\\robot.xml";
+string filenamePath = "data/general/test.xml";
 GLUI_EditText* filenameTextField = NULL;
 
 
@@ -55,8 +55,6 @@ void callback_load(int id) {
 		return;
 	}
 	printf ("%s\n", filenameTextField->get_text());
-	cout << "filenmae: ";
-	cout << filenameTextField->get_text() << endl;
 
 	if (parser != NULL) {
 		delete parser;
@@ -130,7 +128,6 @@ void myGlutReshape(int x, int y)
 /***************************************** setupCamera() *****************/
 void setupCamera()
 {
-	fprintf(stderr, "START SETUP_CAMERA()\n");
 	SceneCameraData cameraData;
 	parser->getCameraData(cameraData);
 

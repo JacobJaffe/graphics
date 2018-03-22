@@ -41,6 +41,15 @@ public:
 
     void Reset() {
         fprintf(stderr, "\nRESET HAS BEEN CALLED\n");
+        _eyePoint = Point(0, 0, 5);
+        _viewAngle = 45;
+        _nearPlane = 1;
+        _farPlane = 20;
+        _rotateU = 0;
+        _rotateV = 0;
+        _rotateW = 0;
+        _upVector = Vector(0, 1, 0);
+        _lookVector = Vector(0, 0, -1);
     };
 
   double GetFilmPlaneDepth();
