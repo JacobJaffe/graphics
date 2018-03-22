@@ -45,27 +45,27 @@ GLUI_Button      *cut_btn;
 	=================================================== */
 bool startTheScene = false;
 float carSpeed = 0;
-float rexSpeed = 0;	
+float rexSpeed = 0;
 float jump = 0;
 
 /* ================= Movie Objects =================
 	Our handy ply function allows us to load more interesting
 	scenes.
    ================================================= */
-ply* 	trex = new ply("./data/trex.ply");	
-ply* 	jeep = new ply("./data/jeep.ply");
-ply* 	cam = new ply("./data/camera.ply");
+ply* 	trex = new ply("./src/data/trex.ply");
+ply* 	jeep = new ply("./src/data/jeep.ply");
+ply* 	cam = new ply("./src/data/camera.ply");
 
-ply* 	log_ = new ply("./data/log.ply");	
-ply* 	gate = new ply("./data/gate.ply");
+ply* 	log_ = new ply("./src/data/log.ply");
+ply* 	gate = new ply("./src/data/gate.ply");
 
 /*  ================= Design Note =================
 	Thought exercise, do I need to load 6 models if they are all the same?
 	Or can I load one tree and then render it 6 times?
 	What if I want to modify individual properties of each tree?
 	=============================================== */
-ply* 	tree = new ply("./data/tree.ply");	
-ply* 	grass = new ply("./data/grass.ply");
+ply* 	tree = new ply("./src/data/tree.ply");
+ply* 	grass = new ply("./src/data/grass.ply");
 
 /* 	================= Camera's =================
 	We will have one camera in this scene
@@ -79,14 +79,14 @@ movieCamera* camera1 = new movieCamera();
 /* 	================= Animation =================
 	Timer for the animation
 	============================================= */
-time_t start; 
+time_t start;
 
 
 /*  ===============================================
-      Desc: 
+      Desc:
       Precondition:
       Postcondition:
-    =============================================== */ 
+    =============================================== */
 void startScene(){
 
 		glEnable(GL_LIGHTING);
@@ -181,26 +181,30 @@ void startScene(){
 		glPopMatrix();
 
 		// T-rex
-		glPushMatrix();	
+		glPushMatrix();
 			float trex_hopping = 1.0;
-			trex->setPosition(-5+rexSpeed,(sin(jump)*trex_hopping)+1.25,-6);	// Set position variables (useful for later)	
+			trex->setPosition(-5+rexSpeed,(sin(jump)*trex_hopping)+1.25,-6);	// Set position variables (useful for later)
+			glTranslatef(trex->getXPosition(), trex->getYPosition(), trex->getZPosition());
+			glScalef(trex->getXScale(), trex->getYScale(), trex->getZScale());
 			if(wireframe==1){ glColor3f(0.0,0.0,0.0); trex->renderWireFrame(); }
 			if(filled==1)	{ glColor3f(0.25f,0.2f,0.1f); trex->render(); }
 		glPopMatrix();
-		
+
 		// Jeep
 		glPushMatrix();
 			jeep->setPosition(5+carSpeed,1,-6);
+			glTranslatef(jeep->getXPosition(), jeep->getYPosition(), jeep->getZPosition());
+			glScalef(jeep->getXScale(), jeep->getYScale(), jeep->getZScale());
 			if(wireframe==1){ glColor3f(0.0,0.0,0.0); jeep->renderWireFrame(); }
-			if(filled==1)	{ glColor3f(0.15f,0.6f,0.1f); jeep->render(); }			
-		glPopMatrix();		
+			if(filled==1)	{ glColor3f(0.15f,0.6f,0.1f); jeep->render(); }
+		glPopMatrix();
 }
 
 /*  ===============================================
-      Desc: 
+      Desc:
       Precondition:
       Postcondition:
-    =============================================== */ 
+    =============================================== */
 void resetScene(){
 	std::cout << "cut, cut, CUT!" << std::endl;
 	double seconds_since_start = difftime(time(NULL),start);
@@ -211,7 +215,7 @@ void resetScene(){
 	view_pos[2] = 2;
 
 	carSpeed = 0;
-	rexSpeed = 0;	
+	rexSpeed = 0;
 	jump = 0;
 }
 
@@ -219,7 +223,7 @@ void resetScene(){
       Desc: Callbacks for the scene
       Precondition:
       Postcondition:
-    =============================================== */ 
+    =============================================== */
 void pointer_cb( GLUI_Control* control )
 {
   if (control->get_id() == ACTION_ID ) {
@@ -236,10 +240,10 @@ void pointer_cb( GLUI_Control* control )
 
 /***************************************** myGlutIdle() ***********/
 /*  ===============================================
-      Desc: 
+      Desc:
       Precondition:
       Postcondition:
-    =============================================== */ 
+    =============================================== */
 void myGlutIdle(void)
 {
 	/* According to the GLUT specification, the current window is
@@ -254,10 +258,10 @@ void myGlutIdle(void)
 
 /**************************************** myGlutReshape() *************/
 /*  ===============================================
-      Desc: 
+      Desc:
       Precondition:
       Postcondition:
-    =============================================== */ 
+    =============================================== */
 void myGlutReshape(int x, int y)
 {
 	float xy_aspect;
@@ -273,10 +277,10 @@ void myGlutReshape(int x, int y)
 }
 
 /*  ===============================================
-      Desc: 
+      Desc:
       Precondition:
       Postcondition:
-    =============================================== */ 
+    =============================================== */
 void draw_grid(){
 	int grid_size = 20;
 	glDisable(GL_LIGHTING);
@@ -291,7 +295,7 @@ void draw_grid(){
 	                glVertex3f( i, 0.0, 0.0 );  glVertex3f( i, 0.0, grid_size ); /* X axis grid */
 	            glEnd();
 	        }
-	    
+
 	        glBegin(GL_LINES);
 	            glColor3f( 1.0, 1.0, 1.0 );
 	            glVertex3f( 0.0, 0.0, grid_size );  glVertex3f( grid_size, 0.0, grid_size ); /* X axis grid */
@@ -304,10 +308,10 @@ void draw_grid(){
 
 /***************************************** myGlutDisplay() *****************/
 /*  ===============================================
-      Desc: 
+      Desc:
       Precondition:
       Postcondition:
-    =============================================== */ 
+    =============================================== */
 void myGlutDisplay(void)
 {
 	static float scale = 0.1;
@@ -323,13 +327,13 @@ void myGlutDisplay(void)
 	if(startTheScene==false){
 		glTranslatef( view_pos[0], view_pos[1]-2, -view_pos[2]-6 );
 	}
-	/* Perform camera transformations 
+	/* Perform camera transformations
 	   Each camera funtion will be called after
 	   a certain amount of time has elapsed.
-	
+
 		You are free to implement your own camera functions!
 		*** Be Creative! ***
-	
+
 	*/
 	if(startTheScene==true){
 		// Output the time to the console, just a a director would have time
@@ -343,11 +347,11 @@ void myGlutDisplay(void)
 			std::cout << "Close Up" << endl;
 			// Close up shot on the T-Rex
 			camera1->closeUp(trex->getXPosition(), trex->getYPosition(),trex->getZPosition(),
-							1,10);	
+							1,10);
 		}
 		else if(difftime(time(NULL),start) > 6 && difftime(time(NULL),start) <= 10){
 			std::cout << "follow shot" << endl;
-			//camera1->perspective(105,.75,1,10);	// Get the regular perspective
+			camera1->perspective(105,.75,1,10);	// Get the regular perspective
 			camera1->follow(trex->getXPosition(), trex->getYPosition()-2,trex->getZPosition(),
 				0, 0, 0,
 				0, 0, 0); // attach the camera to the t-rex
@@ -478,19 +482,19 @@ int main(int argc, char* argv[])
 	glClearColor (0.0, 0.0, 0.0, 0.0);
 	glShadeModel (GL_SMOOTH);
 
-	glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient); 
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse); 
+	glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
 	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, mat_ambient); 
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse); 
+	glLightfv(GL_LIGHT0, GL_AMBIENT, mat_ambient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
-	glLightfv(GL_LIGHT1, GL_AMBIENT, mat_ambient); 
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse); 
+	glLightfv(GL_LIGHT1, GL_AMBIENT, mat_ambient);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
 	glLightfv(GL_LIGHT1, GL_POSITION, light1_position);
-	glLightfv(GL_LIGHT2, GL_AMBIENT, mat_ambient); 
-	glLightfv(GL_LIGHT2, GL_DIFFUSE, light_diffuse); 
+	glLightfv(GL_LIGHT2, GL_AMBIENT, mat_ambient);
+	glLightfv(GL_LIGHT2, GL_DIFFUSE, light_diffuse);
 	glLightfv(GL_LIGHT2, GL_POSITION, light2_position);
 
 	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_diffuse);
@@ -514,9 +518,9 @@ int main(int argc, char* argv[])
 	/****************************************/
 
 	// Make the t-rex big!
-	trex->setScale(10,10,10); 
+	trex->setScale(10,10,10);
 	// Increase the size of the t-rex as well
-	jeep->setScale(3,3,3);	  
+	jeep->setScale(3,3,3);
 
 	/****************************************/
 	/*         Here's the GLUI code         */
@@ -564,6 +568,3 @@ int main(int argc, char* argv[])
 
 	return EXIT_SUCCESS;
 }
-
-
-
