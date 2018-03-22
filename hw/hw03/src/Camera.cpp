@@ -9,8 +9,12 @@ Camera::Camera() {
 Camera::~Camera() {
 }
 
-// TODO
+// TODO: ensure works
 void Camera::Orient(Point& eye, Point& focus, Vector& up) {
+    _eyePoint = Point(eye);
+    _lookVector = Vector(focus - eye);
+    _upVector = Vector(up);
+
 }
 
 void Camera::Orient(Point& eye, Vector& look, Vector& up) {
@@ -80,7 +84,7 @@ void Camera::SetScreenSize (int screenWidth, int screenHeight) {
 	_screenHeight = screenHeight;
 }
 
-void Cammera::Reset () {
+void Camera::Reset () {
     _eyePoint = Point(0, 0, 5);
     _viewAngle = 45;
     _nearPlane = 1;
@@ -171,8 +175,9 @@ void Camera::RotateW(double angle) {
 	_rotateW = angle;
 }
 
-// TODO
+// TODO: Ensure this works
 void Camera::Translate(const Vector &v) {
+    _eyePoint = _eyePoint + v;
 }
 
 // TODO
@@ -187,7 +192,6 @@ Vector Camera::GetLookVector() {
 	return _lookVector;
 }
 
-// TODO
 Vector Camera::GetUpVector() {
 	return _upVector;
 }

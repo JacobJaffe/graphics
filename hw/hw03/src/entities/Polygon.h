@@ -37,7 +37,6 @@ public:
   }
 
   void draw() {
-
     Point p0 = borderVertexList[0];
     Point p1 = borderVertexList[1];
     Point p2 = borderVertexList[2];

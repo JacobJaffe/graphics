@@ -282,12 +282,14 @@ void myGlutDisplay(void)
 	glVertex3f(0, 0, 0); glVertex3f(0, 0, 1.0);
 	glEnd();
 
-	glColor3f(1.0, 0.0, 0.0);
+	glColor3f(0.5, 0.2, 0.6);
 	if (wireframe) {
 		glDisable(GL_POLYGON_OFFSET_FILL);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		//TODO: draw wireframe of the scene...
 		// note that you don't need to applyMaterial, just draw the geometry
+        renderShape(SHAPE_CUBE);
+
 	}
 
     glDisable(GL_COLOR_MATERIAL);
@@ -304,7 +306,8 @@ void myGlutDisplay(void)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		//TODO: render the scene...
 		// note that you should always applyMaterial first, then draw the geometry
-	}
+        renderShape(SHAPE_CUBE);
+    }
 	glDisable(GL_LIGHTING);
 	
 	camera->RotateV(-camRotV);
