@@ -13,6 +13,7 @@
 #include "SceneParser.h"
 #include "Camera.h"
 
+
 using namespace std;
 
 /** These are the live variables passed into GLUI ***/
@@ -48,6 +49,11 @@ SceneParser* parser = NULL;
 Camera* camera = new Camera();
 
 void setupCamera();
+
+// traversing the graph
+void drawSceneWireframe(SceneNode *root);
+void drawSceneNode(SceneNode *root);
+void drawPrimitive (ScenePrimitive *primitive);
 
 void callback_load(int id) {
 	char curDirName [2048];
@@ -288,8 +294,7 @@ void myGlutDisplay(void)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		//TODO: draw wireframe of the scene...
 		// note that you don't need to applyMaterial, just draw the geometry
-        renderShape(SHAPE_CUBE);
-
+        drawSceneWireframe(root);
 	}
 
     glDisable(GL_COLOR_MATERIAL);
@@ -306,7 +311,6 @@ void myGlutDisplay(void)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		//TODO: render the scene...
 		// note that you should always applyMaterial first, then draw the geometry
-        renderShape(SHAPE_CUBE);
     }
 	glDisable(GL_LIGHTING);
 	
@@ -424,5 +428,60 @@ int main(int argc, char* argv[])
 	return EXIT_SUCCESS;
 }
 
+void drawSceneWireframe(SceneNode *root)
+{
+    drawSceneNode(root);
+}
 
+void drawSceneNode(SceneNode *root)
+{
+    glPushMatrix();
 
+        int numTransformations = root->transformations.size();
+
+        // we need to handle transformations in order
+        // TODO: just make a list for each while traversing first time for efficiency
+
+        // 2) handle rotation
+        for (int i = 0; i <numTransformations; i++) {
+            SceneTransformation *transformation = root->transformations[i];
+            if (transformation->type == TRANSFORMATION_ROTATE) {
+                fprintf(stderr, "Rotating by: %f: %f, %f, %f\n", transformation->angle, transformation->rotate[0], transformation->rotate[1], transformation->rotate[2]);
+                glRotatef(transformation->angle * 180 / PI, transformation->rotate[0], transformation->rotate[1], transformation->rotate[2]);
+            }
+        }
+
+        // 2) handle translation
+        for (int i = 0; i <numTransformations; i++) {
+            SceneTransformation *transformation = root->transformations[i];
+            if (transformation->type == TRANSFORMATION_TRANSLATE) {
+                fprintf(stderr, "Translating by: %f, %f, %f\n", transformation->translate[0], transformation->translate[1], transformation->translate[2]);
+                glTranslatef(transformation->translate[0], transformation->translate[1], transformation->translate[2]);
+            }
+        }
+
+    // 1) handle scaling
+    for (int i = 0; i <numTransformations; i++) {
+        SceneTransformation *transformation = root->transformations[i];
+        if (transformation->type == TRANSFORMATION_SCALE) {
+            fprintf(stderr, "Scaling by: %f, %f, %f", transformation->scale[0], transformation->scale[1], transformation->scale[2]);
+            glScalef(transformation->scale[0], transformation->scale[1], transformation->scale[2]);
+        }
+    }
+
+        int numPrimitives = root->primitives.size();
+        for (int i = 0; i <numPrimitives; i++) {
+            drawPrimitive(root->primitives[i]);
+        }
+
+        int numChildren = root->children.size();
+        for (int i = 0; i <numChildren; i++) {
+            drawSceneNode(root->children[i]);
+        }
+    glPopMatrix();
+}
+
+void drawPrimitive (ScenePrimitive *primitive) {
+    cerr << "draw primitive" << endl;
+    renderShape(primitive->type);
+}
