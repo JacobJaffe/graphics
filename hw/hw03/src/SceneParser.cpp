@@ -4,7 +4,7 @@
 
 #include "SceneParser.h"
 #include "SceneData.h"
-#include "Algebra.h"
+#include "./math/Algebra.h"
 
 #include <string>
 
@@ -14,7 +14,7 @@
 
 using namespace std;
 
-SceneParser::SceneParser(const std::string& name) 
+SceneParser::SceneParser(const string& name)
 {
    file_name = name;
 
@@ -83,7 +83,7 @@ bool SceneParser :: getLightData(int i, SceneLightData& data)
 
 SceneNode* SceneParser :: getRootNode() 
 {
-   map<std::string, SceneNode*>::iterator node = m_objects.find("root");
+   map<string, SceneNode*>::iterator node = m_objects.find("root");
    if (node == m_objects.end())
       return NULL;
    return m_objects["root"];

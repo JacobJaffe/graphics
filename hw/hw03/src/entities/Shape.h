@@ -2,14 +2,16 @@
 #define SHAPE_H
 
 #include <GL/glui.h>
-#include "Algebra.h"
+#include "../math/Algebra.h"
+
 
 class Shape {
 public:
-	Shape() {};
-	~Shape() {};
+	Shape() {
+	};
+	virtual ~Shape() {fprintf(stderr, "Base Shape Destructor\n");};
 
-	void setSegments(int x, int y) {
+	virtual void setSegments(int x, int y) {
 		m_segmentsX = x;
 		m_segmentsY = y;
 	}

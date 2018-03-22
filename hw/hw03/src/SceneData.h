@@ -10,7 +10,7 @@
 #define SCENEDATA_H
 
 /* Includes */
-#include "Algebra.h"
+#include "math/Algebra.h"
 #include <vector>
 #include <string>
 

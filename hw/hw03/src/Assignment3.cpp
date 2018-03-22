@@ -5,11 +5,11 @@
 #include <fstream>
 #include <string>
 #include <GL/glui.h>
-#include "Shape.h"
-#include "Cube.h"
-#include "Cylinder.h"
-#include "Cone.h"
-#include "Sphere.h"
+#include "entities/Shape.h"
+#include "entities/Cube.h"
+#include "entities/Cylinder.h"
+#include "entities/Cone.h"
+#include "entities/Sphere.h"
 #include "SceneParser.h"
 #include "Camera.h"
 
@@ -55,6 +55,8 @@ void callback_load(int id) {
 		return;
 	}
 	printf ("%s\n", filenameTextField->get_text());
+	cout << "filenmae: ";
+	cout << filenameTextField->get_text() << endl;
 
 	if (parser != NULL) {
 		delete parser;
@@ -128,6 +130,7 @@ void myGlutReshape(int x, int y)
 /***************************************** setupCamera() *****************/
 void setupCamera()
 {
+	fprintf(stderr, "START SETUP_CAMERA()\n");
 	SceneCameraData cameraData;
 	parser->getCameraData(cameraData);
 
@@ -250,7 +253,12 @@ void myGlutDisplay(void)
 	Matrix projection = camera->GetProjectionMatrix();
 	glLoadMatrixd(projection.unpack());
 
-	camera->Orient(Point(eyeX, eyeY, eyeZ), Vector(lookX, lookY, lookZ), Vector(0, 1, 0));
+	// because has to pass by reference
+	Point p = Point(eyeX, eyeY, eyeZ);
+	Vector v1 = Vector(lookX, lookY, lookZ);
+	Vector v2 = Vector(0, 1, 0);
+
+	camera->Orient(p, v1, v2);
 	camera->RotateV(camRotV);
 	camera->RotateU(camRotU);
 	camera->RotateW(camRotW);
