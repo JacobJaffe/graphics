@@ -80,6 +80,18 @@ void Camera::SetScreenSize (int screenWidth, int screenHeight) {
 	_screenHeight = screenHeight;
 }
 
+void Cammera::Reset () {
+    _eyePoint = Point(0, 0, 5);
+    _viewAngle = 45;
+    _nearPlane = 1;
+    _farPlane = 20;
+    _rotateU = 0;
+    _rotateV = 0;
+    _rotateW = 0;
+    _upVector = Vector(0, 1, 0);
+    _lookVector = Vector(0, 0, -1);
+}
+
 // TODO
 Matrix Camera::GetModelViewMatrix() {
 	// 1) Transform Matrix
