@@ -52,8 +52,9 @@ void setupCamera();
 
 // traversing the graph
 void drawSceneWireframe(SceneNode *root);
-void drawSceneNode(SceneNode *root);
-void drawPrimitive (ScenePrimitive *primitive);
+void drawSceneFill(SceneNode *root);
+void drawSceneNode(SceneNode *root, bool applyMaterial);
+void drawPrimitive (ScenePrimitive *primitive, bool applyMaterial);
 
 void callback_load(int id) {
 	char curDirName [2048];
@@ -311,6 +312,7 @@ void myGlutDisplay(void)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		//TODO: render the scene...
 		// note that you should always applyMaterial first, then draw the geometry
+		drawSceneFill(root);
     }
 	glDisable(GL_LIGHTING);
 	
@@ -430,58 +432,52 @@ int main(int argc, char* argv[])
 
 void drawSceneWireframe(SceneNode *root)
 {
-    drawSceneNode(root);
+    drawSceneNode(root, false);
 }
 
-void drawSceneNode(SceneNode *root)
+void drawSceneFill(SceneNode *root)
+{
+	drawSceneNode(root, true);
+}
+
+void drawSceneNode(SceneNode *root, bool applyMaterial)
 {
     glPushMatrix();
 
         int numTransformations = root->transformations.size();
-
-        // we need to handle transformations in order
-        // TODO: just make a list for each while traversing first time for efficiency
-
-        // 2) handle rotation
-        for (int i = 0; i <numTransformations; i++) {
+	 	for (int i = 0; i <numTransformations; i++) {
             SceneTransformation *transformation = root->transformations[i];
-            if (transformation->type == TRANSFORMATION_ROTATE) {
-                fprintf(stderr, "Rotating by: %f: %f, %f, %f\n", transformation->angle, transformation->rotate[0], transformation->rotate[1], transformation->rotate[2]);
-                glRotatef(transformation->angle * 180 / PI, transformation->rotate[0], transformation->rotate[1], transformation->rotate[2]);
-            }
-        }
+			switch (transformation->type) {
 
-        // 2) handle translation
-        for (int i = 0; i <numTransformations; i++) {
-            SceneTransformation *transformation = root->transformations[i];
-            if (transformation->type == TRANSFORMATION_TRANSLATE) {
-                fprintf(stderr, "Translating by: %f, %f, %f\n", transformation->translate[0], transformation->translate[1], transformation->translate[2]);
-                glTranslatef(transformation->translate[0], transformation->translate[1], transformation->translate[2]);
-            }
-        }
+				case TRANSFORMATION_ROTATE:
+					glRotatef(transformation->angle * 180 / PI, transformation->rotate[0], transformation->rotate[1], transformation->rotate[2]);
+					break;
 
-    // 1) handle scaling
-    for (int i = 0; i <numTransformations; i++) {
-        SceneTransformation *transformation = root->transformations[i];
-        if (transformation->type == TRANSFORMATION_SCALE) {
-            fprintf(stderr, "Scaling by: %f, %f, %f", transformation->scale[0], transformation->scale[1], transformation->scale[2]);
-            glScalef(transformation->scale[0], transformation->scale[1], transformation->scale[2]);
+				case TRANSFORMATION_SCALE:
+					glScalef(transformation->scale[0], transformation->scale[1], transformation->scale[2]);
+					break;
+
+				case TRANSFORMATION_TRANSLATE:
+					glTranslatef(transformation->translate[0], transformation->translate[1], transformation->translate[2]);
+					break;
+			}
         }
-    }
 
         int numPrimitives = root->primitives.size();
         for (int i = 0; i <numPrimitives; i++) {
-            drawPrimitive(root->primitives[i]);
+            drawPrimitive(root->primitives[i], applyMaterial);
         }
 
         int numChildren = root->children.size();
         for (int i = 0; i <numChildren; i++) {
-            drawSceneNode(root->children[i]);
+            drawSceneNode(root->children[i], applyMaterial);
         }
     glPopMatrix();
 }
 
-void drawPrimitive (ScenePrimitive *primitive) {
-    cerr << "draw primitive" << endl;
+void drawPrimitive (ScenePrimitive *primitive, bool shouldApplyMaterial) {
+	if (shouldApplyMaterial) {
+		applyMaterial(primitive->material);
+	}
     renderShape(primitive->type);
 }
