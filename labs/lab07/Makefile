@@ -5,4 +5,4 @@ build:
 		-I/Library/Frameworks/GLUI.framework/Headers/ \
 		-framework OpenGL \
 		-framework GLUT -lglui -Wno-deprecated \
-		-o lab0
+		-o lab07
