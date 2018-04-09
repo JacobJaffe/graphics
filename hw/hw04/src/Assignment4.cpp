@@ -14,6 +14,19 @@
 
 using namespace std;
 
+
+typedef struct Pixel {
+	int r;
+	int g;
+	int b;
+	double t;
+} Pixel;
+
+Pixel drawSceneNode(SceneNode *root, Point p_eye, Vector ray, double t);
+
+
+Pixel getPixel(int x, int y);
+
 /** These are the live variables passed into GLUI ***/
 int  isectOnly = 1;
 
@@ -30,7 +43,7 @@ float lookZ = -2;
 
 /** These are GLUI control panel objects ***/
 int  main_window;
-string filenamePath = "data\\general\\test.xml";
+string filenamePath = "data/general/test.xml";
 GLUI_EditText* filenameTextField = NULL;
 GLubyte* pixels = NULL;
 int pixelWidth = 0, pixelHeight = 0;
@@ -76,13 +89,18 @@ void callback_start(int id) {
 
 	for (int i = 0; i < pixelWidth; i++) {
 		for (int j = 0; j < pixelHeight; j++) {
-			//replace the following code
-			if ((i % 5 == 0) && (j % 5 == 0)) {
-				setPixel(pixels, i, j, 255, 0, 0);
-			}
-			else {
-				setPixel(pixels, i, j, 128, 128, 128);
-			}
+
+			// TODO
+			// //replace the following code
+			// if ((i % 5 == 0) && (j % 5 == 0)) {
+			// 	setPixel(pixels, i, j, 255, 0, 0);
+			// }
+			// else {
+			// 	setPixel(pixels, i, j, 128, 128, 128);
+			// }
+
+			Pixel p = getPixel(i, j);
+			setPixel(pixels, i, j, p.r, p.g, p.b);
 		}
 	}
 	glutPostRedisplay();
@@ -101,9 +119,16 @@ void callback_load(int id) {
 		delete parser;
 	}
 	parser = new SceneParser (filenamePath);
-	cout << "success? " << parser->parse() << endl;
 
-	setupCamera();
+	bool success = parser->parse();
+	cout << "success? " << success << endl;
+	if (success == false) {
+		delete parser;
+		parser = NULL;
+	}
+	else {
+		setupCamera();
+	}
 }
 
 
@@ -170,12 +195,16 @@ void setupCamera()
 
 void updateCamera()
 {
+	std::cout << "UpdateCamera START" << std::endl;
 	camera->Reset();
 
 	Point guiEye (eyeX, eyeY, eyeZ);
 	Point guiLook(lookX, lookY, lookZ);
 	camera->SetViewAngle(viewAngle);
-	camera->Orient(guiEye, guiLook, camera->GetUpVector());
+
+	// need an instance of the vector for a by reference call
+	Vector up = camera->GetUpVector();
+	camera->Orient(guiEye, guiLook, up);
 	camera->RotateU(camRotU);
 	camera->RotateV(camRotV);
 	camera->RotateW(camRotW);
@@ -196,8 +225,13 @@ void myGlutDisplay(void)
 		return;
 	}
 
+	// Point p = camera->GetEyePoint();
+	// std::cout << "EyePoint: " << p[0] << " " << p[1] << " " << p[2] << std::endl;
+	// std::cout << "eyeY: " << eyeY << std::endl;
+
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glDrawPixels(pixelWidth, pixelHeight, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
 	glutSwapBuffers();
 }
 
@@ -246,7 +280,7 @@ int main(int argc, char* argv[])
 	glui->add_button("Load", 0, callback_load);
 	glui->add_button("Start!", 0, callback_start);
 	glui->add_checkbox("Isect Only", &isectOnly);
-	
+
 	GLUI_Panel *camera_panel = glui->add_panel("Camera");
 	(new GLUI_Spinner(camera_panel, "RotateV:", &camRotV))
 		->set_int_limits(-179, 179);
@@ -287,3 +321,244 @@ int main(int argc, char* argv[])
 
 
 
+Pixel foo(Point p_eye, Vector ray) {
+	// black
+	Pixel pixel;
+	pixel.r = 0;
+	pixel.g = 0;
+	pixel.b = 0;
+	pixel.t = -1;
+
+	// t is when ray intersects x y plane
+
+	// respect to the camera at postive Z, looking negatie Z
+	double t_front = 0.5 -p_eye[2] / ray[2];
+	double t_back = -0.5 -p_eye[2] / ray[2];
+
+	double t_left = -0.5 -p_eye[0] / ray[0];
+	double t_right = 0.5 -p_eye[0] / ray[0];
+
+	double t_top = 0.5 -p_eye[1] / ray[1];
+	double t_bot = -0.5 -p_eye[1] / ray[1];
+
+	double near = camera->GetNearPlane();
+
+	double t = -1;
+
+	t = t_front;
+
+	if ( ((t_back < t) || (t == -1)) && (t_back > near))
+	{
+		t = t_back;
+	}
+	if ( ((t_left < t) || (t == -1)) && (t_left > near))
+	{
+		t = t_left;
+	}
+	if ( ((t_right < t) || (t == -1)) && (t_right > near))
+	{
+		t = t_right;
+	}
+	if ( ((t_top < t) || (t == -1)) && (t_top > near))
+	{
+		t = t_top;
+	}
+	if ( ((t_bot < t) || (t == -1)) && (t_bot > near))
+	{
+		t = t_bot;
+	}
+
+
+	if (t < near) {
+			return pixel;
+	}
+
+
+	Point p = p_eye + ray*t;
+
+
+	if (t == t_front) {
+		if ((p[0] >= - 0.5) && (p[0] <= 0.5)) {
+			if ((p[1] >= - 0.5) && (p[1] <= 0.5)) {
+				pixel.b = 255;
+				pixel.g = 0;
+				pixel.r = 0;
+			}
+		}
+	}
+
+	if (t == t_back) {
+		if ((p[0] >= - 0.5) && (p[0] <= 0.5)) {
+			if ((p[1] >= - 0.5) && (p[1] <= 0.5)) {
+				pixel.b = 0;
+				pixel.g = 0;
+				pixel.r = 255;
+			}
+		}
+	}
+
+	if (t == t_right) {
+		if ((p[2] >= - 0.5) && (p[2] <= 0.5)) {
+			if ((p[1] >= - 0.5) && (p[1] <= 0.5)) {
+				pixel.b = 0;
+				pixel.g = 255;
+				pixel.r = 0;
+			}
+		}
+	}
+
+	if (t == t_left) {
+		if ((p[2] >= - 0.5) && (p[2] <= 0.5)) {
+			if ((p[1] >= - 0.5) && (p[1] <= 0.5)) {
+				pixel.b = 0;
+				pixel.g = 255;
+				pixel.r = 255;
+			}
+		}
+	}
+
+	if (t == t_top) {
+		if ((p[2] >= - 0.5) && (p[2] <= 0.5)) {
+			if ((p[0] >= - 0.5) && (p[0] <= 0.5)) {
+				pixel.b = 255;
+				pixel.g = 0;
+				pixel.r = 255;
+			}
+		}
+	}
+
+	if (t == t_bot) {
+		if ((p[2] >= - 0.5) && (p[2] <= 0.5)) {
+			if ((p[0] >= - 0.5) && (p[0] <= 0.5)) {
+				pixel.b = 255;
+				pixel.g = 255;
+				pixel.r = 0;
+			}
+		}
+	}
+
+
+
+	return pixel;
+}
+
+Vector generateRay(int x, int y) {
+
+	// This is way 2:
+
+	// float a = ((2.0 * x) / pixelWidth) - 1;
+	// float b = 1 - ((2.0 * y) / pixelHeight);
+	//
+	// // This is the point on film plane, from x, y on screen
+	// Point p_pixel_film = Point(a, b, -1);
+	//
+	//
+	// // construct Matrix for undoing normalization
+	// Vector v_scale = camera->getScaleVector();
+	// Vector v_trans = camera->getTranslationVector();
+	// Matrix m_rot = camera->GetProjectionMatrix();
+	//
+	// Matrix m_unScale = inv_scale_mat(v_scale);
+	// Matrix m_unTrans = inv_trans_mat(v_trans);
+	// Matrix m_unRotate = transpose(m_rot);
+	//
+	// Matrix m_filmToWorld = m_unTrans * m_unRotate * m_unScale;
+	//
+ 	// // Get pixel in world space
+	// Point p_pixel_world = m_filmToWorld * p_pixel_film;
+	//
+	// // get eye in world space
+	// Point p_eye_world = camera->GetEyePoint();
+	//
+	// // get vector in world space
+	// Vector v = p_pixel_world - p_eye_world;
+	//
+	// return v;
+
+	// This is way 1, which is easy cause we have the LookVector reliably.
+	Vector LookV = camera->GetLookVector();
+
+	// Unit vectors of the film plane
+	Vector v = camera->GetUpVector();
+	v.normalize();
+
+	Vector u = cross(LookV, v);
+	u.normalize();
+
+	// eye point
+	Point P = camera->GetEyePoint();
+
+	double near = camera->GetNearPlane();
+	Point Q = P + near * LookV;
+
+	// Width, height of film plane in the world coordinates
+	double angle_degrees = camera->GetViewAngle();
+	double angle_radians = angle_degrees * PI / 180;
+
+	double H = near * tan(angle_radians / 2);
+	double aspectRatio = camera->GetScreenWidthRatio();
+	double W = H * aspectRatio;
+
+	double a = (-W) + (2 * W) * x / pixelWidth;
+	double b = (-H) + (2 * H) * y / pixelHeight;
+
+	// 3D point on the film plane
+	Point S = Q + (a * u) + (b * v);
+
+	Vector ray = S - P;
+	return ray;
+}
+
+Pixel getPixel(int x, int y) {
+	SceneNode* root = parser->getRootNode();
+
+	Vector ray = generateRay(x, y);
+
+	// // get eye Point
+	Point p_eye = camera->GetEyePoint();
+
+	ray.normalize();
+
+	// Pixel pixel = drawSceneNode(root, p_eye, ray, -1);
+
+	Pixel pixel = foo(p_eye, ray);
+
+	return pixel;
+}
+
+Pixel drawSceneNode(SceneNode *root, Point p_eye, Vector ray, double t)
+{
+    glPushMatrix();
+
+        int numTransformations = root->transformations.size();
+				for (int i = 0; i <numTransformations; i++) {
+					SceneTransformation *transformation = root->transformations[i];
+					switch (transformation->type) {
+
+					case TRANSFORMATION_ROTATE:
+						glRotatef(transformation->angle * 180 / PI, transformation->rotate[0], transformation->rotate[1], transformation->rotate[2]);
+						break;
+
+					case TRANSFORMATION_SCALE:
+						glScalef(transformation->scale[0], transformation->scale[1], transformation->scale[2]);
+						break;
+
+					case TRANSFORMATION_TRANSLATE:
+						glTranslatef(transformation->translate[0], transformation->translate[1], transformation->translate[2]);
+						break;
+					}
+				}
+
+        int numPrimitives = root->primitives.size();
+        for (int i = 0; i < numPrimitives; i++) {
+
+					// TODO: get T for each primative
+            //foo(root->primitives[i]);
+        }
+
+        int numChildren = root->children.size();
+        for (int i = 0; i < numChildren; i++) {
+            drawSceneNode(root->children[i], p_eye, ray, t);
+        }
+    glPopMatrix();
+}
