@@ -319,7 +319,105 @@ int main(int argc, char* argv[])
 	return EXIT_SUCCESS;
 }
 
+const int X = 0;
+const int Y = 1;
+const int Z = 2;
 
+Pixel plane_intersect_front(Point p_eye, Vector ray)
+{
+	Pixel pixel;
+	pixel.r = 0;
+	pixel.b = 0;
+	pixel.g = 0;
+	pixel.t = 999999999;
+
+	double t = (0.5 - p_eye[Z]) / ray[Z];
+	Point p = p_eye + (t * ray);
+	if ((p[X] >= -0.5) && (p[X] <= 0.5)) {
+		if ((p[Y] >= -0.5) && (p[Y] <= 0.5)) {
+			if (t > 0) {
+				pixel.r = 255;
+				pixel.t = t;
+			}
+		}
+	}
+	return pixel;
+}
+
+Pixel plane_intersect_back(Point p_eye, Vector ray)
+{
+	Pixel pixel;
+	pixel.r = 0;
+	pixel.b = 0;
+	pixel.t = -1;
+	return pixel;
+}
+
+Pixel plane_intersect_right(Point p_eye, Vector ray)
+{
+	Pixel pixel;
+	pixel.r = 0;
+	pixel.b = 0;
+	pixel.t = 999999999;
+
+
+
+		double t = (0.5 - p_eye[X]) / ray[X];
+		Point p = p_eye + (t * ray);
+		if ((p[Z] >= -0.5) && (p[Z] <= 0.5)) {
+			if ((p[Y] >= -0.5) && (p[Y] <= 0.5)) {
+				if (t > 0) {
+					pixel.b = 255;
+					pixel.t = t;
+				}
+			}
+		}
+
+	return pixel;
+}
+
+Pixel plane_intersect_left(Point p_eye, Vector ray)
+{
+	Pixel pixel;
+	pixel.r = 0;
+	pixel.b = 0;
+	pixel.g = 0;
+	pixel.t = 999999999;
+
+
+
+		double t = (-0.5 - p_eye[X]) / ray[X];
+		Point p = p_eye + (t * ray);
+		if ((p[Z] >= -0.5) && (p[Z] <= 0.5)) {
+			if ((p[Y] >= -0.5) && (p[Y] <= 0.5)) {
+				if (t > 0) {
+					pixel.g = 255;
+					pixel.t = t;
+				}
+			}
+		}
+
+	return pixel;
+}
+
+Pixel plane_intersect_top(Point p_eye, Vector ray)
+{
+	Pixel pixel;
+	pixel.r = 0;
+	pixel.b = 0;
+	pixel.t = -1;
+
+	return pixel;
+}
+
+Pixel plane_intersect_bot(Point p_eye, Vector ray)
+{
+	Pixel pixel;
+	pixel.r = 0;
+	pixel.b = 0;
+	pixel.t = -1;
+	return pixel;
+}
 
 Pixel foo(Point p_eye, Vector ray) {
 	// black
@@ -327,117 +425,33 @@ Pixel foo(Point p_eye, Vector ray) {
 	pixel.r = 0;
 	pixel.g = 0;
 	pixel.b = 0;
-	pixel.t = -1;
+	pixel.t = 9999999999;
 
-	// t is when ray intersects x y plane
-
-	// respect to the camera at postive Z, looking negatie Z
-	double t_front = 0.5 -p_eye[2] / ray[2];
-	double t_back = -0.5 -p_eye[2] / ray[2];
-
-	double t_left = -0.5 -p_eye[0] / ray[0];
-	double t_right = 0.5 -p_eye[0] / ray[0];
-
-	double t_top = 0.5 -p_eye[1] / ray[1];
-	double t_bot = -0.5 -p_eye[1] / ray[1];
+	Pixel pixel_front = plane_intersect_front(p_eye, ray);
+	Pixel pixel_back = plane_intersect_back(p_eye, ray);
+	Pixel pixel_right = plane_intersect_right(p_eye, ray);
+	Pixel pixel_left = plane_intersect_left(p_eye, ray);
+	Pixel pixel_top = plane_intersect_top(p_eye, ray);
+	Pixel pixel_bot = plane_intersect_bot(p_eye, ray);
 
 	double near = camera->GetNearPlane();
-
-	double t = -1;
-
-	t = t_front;
-
-	if ( ((t_back < t) || (t == -1)) && (t_back > near))
-	{
-		t = t_back;
-	}
-	if ( ((t_left < t) || (t == -1)) && (t_left > near))
-	{
-		t = t_left;
-	}
-	if ( ((t_right < t) || (t == -1)) && (t_right > near))
-	{
-		t = t_right;
-	}
-	if ( ((t_top < t) || (t == -1)) && (t_top > near))
-	{
-		t = t_top;
-	}
-	if ( ((t_bot < t) || (t == -1)) && (t_bot > near))
-	{
-		t = t_bot;
-	}
-
-
-	if (t < near) {
-			return pixel;
-	}
-
-
-	Point p = p_eye + ray*t;
-
-
-	if (t == t_front) {
-		if ((p[0] >= - 0.5) && (p[0] <= 0.5)) {
-			if ((p[1] >= - 0.5) && (p[1] <= 0.5)) {
-				pixel.b = 255;
-				pixel.g = 0;
-				pixel.r = 0;
-			}
+	if (pixel_front.t > near) {
+		if (pixel_front.t < pixel.t) {
+			pixel = pixel_front;
 		}
 	}
 
-	if (t == t_back) {
-		if ((p[0] >= - 0.5) && (p[0] <= 0.5)) {
-			if ((p[1] >= - 0.5) && (p[1] <= 0.5)) {
-				pixel.b = 0;
-				pixel.g = 0;
-				pixel.r = 255;
-			}
+	if (pixel_right.t > near) {
+		if (pixel_right.t < pixel.t) {
+			pixel = pixel_right;
 		}
 	}
 
-	if (t == t_right) {
-		if ((p[2] >= - 0.5) && (p[2] <= 0.5)) {
-			if ((p[1] >= - 0.5) && (p[1] <= 0.5)) {
-				pixel.b = 0;
-				pixel.g = 255;
-				pixel.r = 0;
-			}
+	if (pixel_left.t > near) {
+		if (pixel_left.t < pixel.t) {
+			pixel = pixel_left;
 		}
 	}
-
-	if (t == t_left) {
-		if ((p[2] >= - 0.5) && (p[2] <= 0.5)) {
-			if ((p[1] >= - 0.5) && (p[1] <= 0.5)) {
-				pixel.b = 0;
-				pixel.g = 255;
-				pixel.r = 255;
-			}
-		}
-	}
-
-	if (t == t_top) {
-		if ((p[2] >= - 0.5) && (p[2] <= 0.5)) {
-			if ((p[0] >= - 0.5) && (p[0] <= 0.5)) {
-				pixel.b = 255;
-				pixel.g = 0;
-				pixel.r = 255;
-			}
-		}
-	}
-
-	if (t == t_bot) {
-		if ((p[2] >= - 0.5) && (p[2] <= 0.5)) {
-			if ((p[0] >= - 0.5) && (p[0] <= 0.5)) {
-				pixel.b = 255;
-				pixel.g = 255;
-				pixel.r = 0;
-			}
-		}
-	}
-
-
 
 	return pixel;
 }
@@ -495,7 +509,7 @@ Vector generateRay(int x, int y) {
 	double angle_degrees = camera->GetViewAngle();
 	double angle_radians = angle_degrees * PI / 180;
 
-	double H = near * tan(angle_radians / 2);
+	double H = near * tan(angle_radians);
 	double aspectRatio = camera->GetScreenWidthRatio();
 	double W = H * aspectRatio;
 
