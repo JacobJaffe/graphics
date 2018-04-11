@@ -16,29 +16,29 @@ double Sphere::Intersect(Point p_eye_world, Vector ray_world, Matrix transformMa
 
   double t = DBL_MAX;
   double r = 0.5;
-  // Vector v_eye__obj = Vector(p_eye__obj[0], p_eye__obj[1], p_eye__obj[2]);
-  //
-  // double A = dot(ray__obj, ray__obj);
-  // double B = 2 * dot(v_eye__obj, ray__obj);
-  // double C = dot(v_eye__obj, v_eye__obj) - (0.5 * 0.5);
-  //
-  // double foo = (B * B) - (4 * A * C);
-  // if (foo < 1) {
-  //   return t;
-  // }
-  //
-  // double t_negative = (-B  - sqrt(foo)) / (2 * A);
-  // double t_positive = (-B  + sqrt(foo)) / (2 * A);
-  //
-  // if (t_negative >= 1) {
-  //   t = t_negative;
-  // }
-  //
-  // if (t_positive >= 1 && t_positive < t) {
-  //   t = t_positive;
-  // }
-  return DBL_MAX;
 
+  double A = (ray[0] * ray[0]) + (ray[1] * ray[1]) + (ray[2] * ray[2]);
+  double B = 2 * ((ray[0] * eye[0]) + (ray[2] * eye[2]) + (ray[1] * eye[1]));
+  double C = (eye[0] * eye[0]) + (eye[1] * eye[1]) + (eye[2] * eye[2]) - (r * r);
+
+  double foo = (B * B) - (4 * A * C);
+  if (foo < 0) {
+    return t;
+  }
+
+  double t_negative = (-B  - sqrt(foo)) / (2 * A);
+  double t_positive = (-B  + sqrt(foo)) / (2 * A);
+
+  if (t_negative >= 1) {
+    t = t_negative;
+  }
+
+  if (t_positive >= 1 && t_positive < t) {
+    t = t_positive;
+  }
+
+
+  return t;
 };
 
 Vector Sphere::findIsectNormal(Point p_eye, Vector ray, double dist)
