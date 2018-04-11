@@ -9,10 +9,10 @@ const int Z = 2;
 
 using namespace std;
 
-double Sphere::Intersect(Point p_eye, Vector ray, Matrix transformMatrix) {
+double Sphere::Intersect(Point p_eye_world, Vector ray_world, Matrix transformMatrix) {
   Matrix inverseTransformMatrix = invert(transformMatrix);
-  Vector ray__obj = inverseTransformMatrix * ray;
-  Point p_eye__obj = inverseTransformMatrix * p_eye;
+  Vector ray = inverseTransformMatrix * ray_world;
+  Point eye = inverseTransformMatrix * p_eye_world;
 
   double t = DBL_MAX;
   double r = 0.5;
@@ -37,28 +37,6 @@ double Sphere::Intersect(Point p_eye, Vector ray, Matrix transformMatrix) {
   // if (t_positive >= 1 && t_positive < t) {
   //   t = t_positive;
   // }
-
-   t = (-p_eye__obj[0]) / ray__obj[0];
-   Point p = p_eye__obj + (ray__obj * t);
-
-   if (((p[1] * p[1]) + (p[2] * p[2])) < (r * r)) {
-     return t;
-   }
-
-   t = (-p_eye__obj[1]) / ray__obj[1];
-   Point p2 = p_eye__obj + (ray__obj * t);
-
-   if (((p2[0] * p2[0]) + (p2[2] * p2[2])) < (r * r)) {
-     return t;
-   }
-
-   t = (-p_eye__obj[2]) / ray__obj[2];
-   Point p3 = p_eye__obj + (ray__obj * t);
-
-   if (((p3[0] * p3[0]) + (p3[1] * p3[1])) < (r * r)) {
-     return t;
-   }
-
   return DBL_MAX;
 
 };
