@@ -22,7 +22,8 @@ typedef struct Pixel {
 	double t;
 } Pixel;
 
-Pixel drawSceneNode(SceneNode *root, Point p_eye, Vector ray, double t);
+Pixel drawSceneNode(SceneNode *root, Point p_eye, Vector ray,  Matrix transformMatrix);
+void setShape (ScenePrimitive *primitive);
 
 
 Pixel getPixel(int x, int y);
@@ -56,6 +57,8 @@ Cone* cone = new Cone();
 Sphere* sphere = new Sphere();
 SceneParser* parser = NULL;
 Camera* camera = new Camera();
+Shape* shape = NULL;
+
 
 void setupCamera();
 void updateCamera();
@@ -181,6 +184,7 @@ void setupCamera()
 	viewAngle = camera->GetViewAngle();
 	Point eyeP = camera->GetEyePoint();
 	Vector lookV = camera->GetLookVector();
+	lookV.normalize();
 	eyeX = eyeP[0];
 	eyeY = eyeP[1];
 	eyeZ = eyeP[2];
@@ -319,175 +323,7 @@ int main(int argc, char* argv[])
 	return EXIT_SUCCESS;
 }
 
-const int X = 0;
-const int Y = 1;
-const int Z = 2;
-
-Pixel plane_intersect_front(Point p_eye, Vector ray)
-{
-	Pixel pixel;
-	pixel.r = 0;
-	pixel.b = 0;
-	pixel.g = 0;
-	pixel.t = 999999999;
-
-	double t = (0.5 - p_eye[Z]) / ray[Z];
-	Point p = p_eye + (t * ray);
-	if ((p[X] >= -0.5) && (p[X] <= 0.5)) {
-		if ((p[Y] >= -0.5) && (p[Y] <= 0.5)) {
-			if (t > 0) {
-				pixel.r = 255;
-				pixel.t = t;
-			}
-		}
-	}
-	return pixel;
-}
-
-Pixel plane_intersect_back(Point p_eye, Vector ray)
-{
-	Pixel pixel;
-	pixel.r = 0;
-	pixel.b = 0;
-	pixel.t = -1;
-	return pixel;
-}
-
-Pixel plane_intersect_right(Point p_eye, Vector ray)
-{
-	Pixel pixel;
-	pixel.r = 0;
-	pixel.b = 0;
-	pixel.t = 999999999;
-
-
-
-		double t = (0.5 - p_eye[X]) / ray[X];
-		Point p = p_eye + (t * ray);
-		if ((p[Z] >= -0.5) && (p[Z] <= 0.5)) {
-			if ((p[Y] >= -0.5) && (p[Y] <= 0.5)) {
-				if (t > 0) {
-					pixel.b = 255;
-					pixel.t = t;
-				}
-			}
-		}
-
-	return pixel;
-}
-
-Pixel plane_intersect_left(Point p_eye, Vector ray)
-{
-	Pixel pixel;
-	pixel.r = 0;
-	pixel.b = 0;
-	pixel.g = 0;
-	pixel.t = 999999999;
-
-
-
-		double t = (-0.5 - p_eye[X]) / ray[X];
-		Point p = p_eye + (t * ray);
-		if ((p[Z] >= -0.5) && (p[Z] <= 0.5)) {
-			if ((p[Y] >= -0.5) && (p[Y] <= 0.5)) {
-				if (t > 0) {
-					pixel.g = 255;
-					pixel.t = t;
-				}
-			}
-		}
-
-	return pixel;
-}
-
-Pixel plane_intersect_top(Point p_eye, Vector ray)
-{
-	Pixel pixel;
-	pixel.r = 0;
-	pixel.b = 0;
-	pixel.t = -1;
-
-	return pixel;
-}
-
-Pixel plane_intersect_bot(Point p_eye, Vector ray)
-{
-	Pixel pixel;
-	pixel.r = 0;
-	pixel.b = 0;
-	pixel.t = -1;
-	return pixel;
-}
-
-Pixel foo(Point p_eye, Vector ray) {
-	// black
-	Pixel pixel;
-	pixel.r = 0;
-	pixel.g = 0;
-	pixel.b = 0;
-	pixel.t = 9999999999;
-
-	Pixel pixel_front = plane_intersect_front(p_eye, ray);
-	Pixel pixel_back = plane_intersect_back(p_eye, ray);
-	Pixel pixel_right = plane_intersect_right(p_eye, ray);
-	Pixel pixel_left = plane_intersect_left(p_eye, ray);
-	Pixel pixel_top = plane_intersect_top(p_eye, ray);
-	Pixel pixel_bot = plane_intersect_bot(p_eye, ray);
-
-	double near = camera->GetNearPlane();
-	if (pixel_front.t > near) {
-		if (pixel_front.t < pixel.t) {
-			pixel = pixel_front;
-		}
-	}
-
-	if (pixel_right.t > near) {
-		if (pixel_right.t < pixel.t) {
-			pixel = pixel_right;
-		}
-	}
-
-	if (pixel_left.t > near) {
-		if (pixel_left.t < pixel.t) {
-			pixel = pixel_left;
-		}
-	}
-
-	return pixel;
-}
-
 Vector generateRay(int x, int y) {
-
-	// This is way 2:
-
-	// float a = ((2.0 * x) / pixelWidth) - 1;
-	// float b = 1 - ((2.0 * y) / pixelHeight);
-	//
-	// // This is the point on film plane, from x, y on screen
-	// Point p_pixel_film = Point(a, b, -1);
-	//
-	//
-	// // construct Matrix for undoing normalization
-	// Vector v_scale = camera->getScaleVector();
-	// Vector v_trans = camera->getTranslationVector();
-	// Matrix m_rot = camera->GetProjectionMatrix();
-	//
-	// Matrix m_unScale = inv_scale_mat(v_scale);
-	// Matrix m_unTrans = inv_trans_mat(v_trans);
-	// Matrix m_unRotate = transpose(m_rot);
-	//
-	// Matrix m_filmToWorld = m_unTrans * m_unRotate * m_unScale;
-	//
- 	// // Get pixel in world space
-	// Point p_pixel_world = m_filmToWorld * p_pixel_film;
-	//
-	// // get eye in world space
-	// Point p_eye_world = camera->GetEyePoint();
-	//
-	// // get vector in world space
-	// Vector v = p_pixel_world - p_eye_world;
-	//
-	// return v;
 
 	// This is way 1, which is easy cause we have the LookVector reliably.
 	Vector LookV = camera->GetLookVector();
@@ -509,7 +345,7 @@ Vector generateRay(int x, int y) {
 	double angle_degrees = camera->GetViewAngle();
 	double angle_radians = angle_degrees * PI / 180;
 
-	double H = near * tan(angle_radians);
+	double H = near * tan(angle_radians / 2);
 	double aspectRatio = camera->GetScreenWidthRatio();
 	double W = H * aspectRatio;
 
@@ -533,46 +369,109 @@ Pixel getPixel(int x, int y) {
 
 	ray.normalize();
 
-	// Pixel pixel = drawSceneNode(root, p_eye, ray, -1);
-
-	Pixel pixel = foo(p_eye, ray);
+	Matrix transformMatrix = Matrix();
+	Pixel pixel = drawSceneNode(root, p_eye, ray, transformMatrix);
 
 	return pixel;
 }
 
-Pixel drawSceneNode(SceneNode *root, Point p_eye, Vector ray, double t)
+void setShape (ScenePrimitive *primitive) {
+	int shapeType = primitive->type;
+	switch (shapeType) {
+	case SHAPE_CUBE:
+		shape = cube;
+		break;
+	case SHAPE_CYLINDER:
+		shape = cylinder;
+		break;
+	case SHAPE_CONE:
+		shape = cone;
+		break;
+	case SHAPE_SPHERE:
+		shape = sphere;
+		break;
+	case SHAPE_SPECIAL1:
+		shape = cube;
+		break;
+	default:
+		shape = cube;
+	}
+
+	if (shapeType != SHAPE_CUBE and shapeType != SHAPE_SPHERE) {
+		shape = cube;
+	}
+}
+
+Pixel drawSceneNode(SceneNode *root, Point p_eye, Vector ray, Matrix transformMatrix)
 {
-    glPushMatrix();
+		Pixel pixel;
+		pixel.r = 0;
+		pixel.g = 0;
+		pixel.b = 0;
+		pixel.t = DBL_MAX;
 
-        int numTransformations = root->transformations.size();
-				for (int i = 0; i <numTransformations; i++) {
-					SceneTransformation *transformation = root->transformations[i];
-					switch (transformation->type) {
+		double far = camera->GetFarPlane();
 
-					case TRANSFORMATION_ROTATE:
-						glRotatef(transformation->angle * 180 / PI, transformation->rotate[0], transformation->rotate[1], transformation->rotate[2]);
-						break;
+		int numTransformations = root->transformations.size();
+		for (int i = 0; i <numTransformations; i++) {
+			SceneTransformation *transformation = root->transformations[i];
+			switch (transformation->type) {
 
-					case TRANSFORMATION_SCALE:
-						glScalef(transformation->scale[0], transformation->scale[1], transformation->scale[2]);
-						break;
-
-					case TRANSFORMATION_TRANSLATE:
-						glTranslatef(transformation->translate[0], transformation->translate[1], transformation->translate[2]);
-						break;
-					}
+				case TRANSFORMATION_ROTATE: {
+					Vector v_rot = Vector(transformation->rotate[0], transformation->rotate[1], transformation->rotate[2]);
+					double a = transformation->angle * 180 / PI;
+					Matrix m_rot = rot_mat(v_rot, a);
+					transformMatrix = transformMatrix * m_rot;
+					break;
 				}
 
-        int numPrimitives = root->primitives.size();
-        for (int i = 0; i < numPrimitives; i++) {
+				case TRANSFORMATION_SCALE: {
+					Vector v_scale = Vector(transformation->scale[0], transformation->scale[1], transformation->scale[2]);
+					Matrix m_scale = scale_mat(v_scale);
+					transformMatrix = transformMatrix * m_scale;
+					break;
+				}
 
-					// TODO: get T for each primative
-            //foo(root->primitives[i]);
-        }
+				case TRANSFORMATION_TRANSLATE: {
+					Vector v_trans = Vector(transformation->translate[0], transformation->translate[1], transformation->translate[2]);
+					Matrix m_trans = trans_mat(v_trans);
+					transformMatrix = transformMatrix * m_trans;
+					break;
+				}
+			}
+		}
 
-        int numChildren = root->children.size();
-        for (int i = 0; i < numChildren; i++) {
-            drawSceneNode(root->children[i], p_eye, ray, t);
-        }
-    glPopMatrix();
+		int numPrimitives = root->primitives.size();
+
+		for (int i = 0; i < numPrimitives; i++) {
+		    setShape(root->primitives[i]);
+				double t_shape = shape->Intersect(p_eye, ray, transformMatrix);
+
+				if ((t_shape >= 1) && (t_shape <= far) && (t_shape < pixel.t)) {
+
+					// compute object space ray and eye
+					Matrix inverseTransformMatrix = invert(transformMatrix);
+					Vector ray__object = inverseTransformMatrix * ray;
+					Point p_eye__object = inverseTransformMatrix * p_eye;
+
+					// find normal of surface at intersect point
+					Vector n = shape->findIsectNormal(p_eye__object, ray__object, t_shape);
+
+					pixel.t = t_shape;
+					pixel.r = 100 + n[0] * 100;
+					pixel.g = 100 + n[1] * 100;
+					pixel.b = 100 + n[2] * 100;
+
+				}
+		}
+
+		int numChildren = root->children.size();
+		for (int i = 0; i < numChildren; i++) {
+		    Pixel child_pixel = drawSceneNode(root->children[i], p_eye, ray, transformMatrix);
+				if ((child_pixel.t >= 1) && (child_pixel.t <= far) && (child_pixel.t < pixel.t)) {
+					pixel = child_pixel;
+				}
+		}
+
+		return pixel;
 }

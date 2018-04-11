@@ -70,7 +70,7 @@
 		</transblock>
 		<transblock>
 		    <translate x="0" y="4" z="0"/>
-		    <scale x="3" y="3" z="3"/>
+		    <scale x="1" y="3" z="3"/>
 		    <object type="primitive" name="cube" >
 			<diffuse r="1" g="0" b="1"/>
 		    </object>
@@ -87,4 +87,3 @@
     </object>
 
 </scenefile>
-

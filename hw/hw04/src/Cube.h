@@ -15,14 +15,10 @@ public:
 	void drawNormal() {
 	};
 
-	double Intersect(Point eyePointP, Vector rayV, Matrix transformMatrix) {
-		return 0;
-	};
+	double Intersect(Point eyePointP, Vector rayV, Matrix transformMatrix);
 
-	Vector findIsectNormal(Point eyePoint, Vector ray, double dist) {
-		Vector v;
-		return v;
-	};
+	// THESE HAVE TO BE IN THE OBJECT SPACE ALREADY
+	Vector findIsectNormal(Point eyePoint, Vector ray, double dist);
 };
 
 #endif
