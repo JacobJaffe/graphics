@@ -184,7 +184,6 @@ void setupCamera()
 	viewAngle = camera->GetViewAngle();
 	Point eyeP = camera->GetEyePoint();
 	Vector lookV = camera->GetLookVector();
-	lookV.normalize();
 	eyeX = eyeP[0];
 	eyeY = eyeP[1];
 	eyeZ = eyeP[2];
@@ -394,10 +393,6 @@ void setShape (ScenePrimitive *primitive) {
 		shape = cube;
 		break;
 	default:
-		shape = cube;
-	}
-
-	if (shapeType != SHAPE_CUBE and shapeType != SHAPE_SPHERE) {
 		shape = cube;
 	}
 }
