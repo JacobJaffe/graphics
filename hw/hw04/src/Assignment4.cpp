@@ -202,7 +202,8 @@ void updateCamera()
 	camera->Reset();
 
 	Point guiEye (eyeX, eyeY, eyeZ);
-	Point guiLook(lookX, lookY, lookZ);
+	Vector guiLook(lookX, lookY, lookZ);
+	guiLook.normalize();
 	camera->SetViewAngle(viewAngle);
 
 	// need an instance of the vector for a by reference call
