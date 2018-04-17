@@ -16,15 +16,21 @@ using namespace std;
 
 
 typedef struct Pixel {
-	int r;
-	int g;
-	int b;
-	double t;
+	double r;
+	double g;
+	double b;
 } Pixel;
 
-Pixel drawSceneNode(SceneNode *root, Point p_eye, Vector ray,  Matrix transformMatrix);
-void setShape (ScenePrimitive *primitive);
+typedef struct Intersection {
+	double t;
+	ScenePrimitive *primitive;
+	Vector isectNormal;
+	Point point;
+} Intersection;
 
+Intersection drawSceneNode(SceneNode *root, Point p_eye, Vector ray,  Matrix transformMatrix);
+void setShape (ScenePrimitive *primitive);
+Pixel getColor(Intersection intersection);
 
 Pixel getPixel(int x, int y);
 
@@ -92,18 +98,8 @@ void callback_start(int id) {
 
 	for (int i = 0; i < pixelWidth; i++) {
 		for (int j = 0; j < pixelHeight; j++) {
-
-			// TODO
-			// //replace the following code
-			// if ((i % 5 == 0) && (j % 5 == 0)) {
-			// 	setPixel(pixels, i, j, 255, 0, 0);
-			// }
-			// else {
-			// 	setPixel(pixels, i, j, 128, 128, 128);
-			// }
-
 			Pixel p = getPixel(i, j);
-			setPixel(pixels, i, j, p.r, p.g, p.b);
+			setPixel(pixels, i, j, p.r * 255, p.g * 255, p.b * 255);
 		}
 	}
 	glutPostRedisplay();
@@ -370,9 +366,57 @@ Pixel getPixel(int x, int y) {
 	ray.normalize();
 
 	Matrix transformMatrix = Matrix();
-	Pixel pixel = drawSceneNode(root, p_eye, ray, transformMatrix);
+	Intersection intersection = drawSceneNode(root, p_eye, ray, transformMatrix);
 
-	return pixel;
+	intersection.point = p_eye + ray * intersection.t;
+
+	Pixel p = getColor(intersection);
+	return p;
+}
+
+Pixel getColor(Intersection intersection)
+{
+	Pixel p;
+	p.r = 0;
+	p.g = 0;
+	p.b = 0;
+
+	if (intersection.primitive == NULL) {
+		return p;
+	}
+
+	SceneGlobalData sgd;
+	if (!parser->getGlobalData(sgd)) {
+		fprintf(stderr, "\nERROR: DID NOT GET SCENE GLOBAL DATA\n");
+	}
+
+	int num_lights = parser->getNumLights();
+	SceneColor O_a = intersection.primitive->material.cAmbient;
+	SceneColor O_d = intersection.primitive->material.cDiffuse;
+	SceneColor O_c = intersection.primitive->material.cSpecular;
+
+	// RED
+	// ambiant light of scene
+	p.r = sgd.ka * O_a.r;
+
+	for (int i = 0; i < num_lights; i++) {
+		SceneLightData sld;
+		if (!parser->getLightData(i, sld)) {
+			fprintf(stderr, "\nERROR: DID NOT GET LIGHT DATA FOR LIGHT: %d\n", i);
+			continue;
+		}
+		Vector N = intersection.isectNormal;
+		N.normalize();
+		Vector L = sld.pos - intersection.point;
+		L.normalize();
+		double difuse = sgd.kd * O_d.r * dot(N, L);
+		double specular = 0;
+		double intensity = sld.color.r;
+
+		p.r += intensity * (difuse + specular);
+	}
+
+	return p;
 }
 
 void setShape (ScenePrimitive *primitive) {
@@ -398,13 +442,11 @@ void setShape (ScenePrimitive *primitive) {
 	}
 }
 
-Pixel drawSceneNode(SceneNode *root, Point p_eye, Vector ray, Matrix transformMatrix)
+Intersection drawSceneNode(SceneNode *root, Point p_eye, Vector ray, Matrix transformMatrix)
 {
-		Pixel pixel;
-		pixel.r = 0;
-		pixel.g = 0;
-		pixel.b = 0;
-		pixel.t = DBL_MAX;
+		Intersection intersection;
+		intersection.primitive = NULL;
+		intersection.t = DBL_MAX;
 
 		double far = camera->GetFarPlane();
 
@@ -443,7 +485,7 @@ Pixel drawSceneNode(SceneNode *root, Point p_eye, Vector ray, Matrix transformMa
 		    setShape(root->primitives[i]);
 				double t_shape = shape->Intersect(p_eye, ray, transformMatrix);
 
-				if ((t_shape >= 1) && (t_shape <= far) && (t_shape < pixel.t)) {
+				if ((t_shape >= 1) && (t_shape <= far) && (t_shape < intersection.t)) {
 
 					// compute object space ray and eye
 					Matrix inverseTransformMatrix = invert(transformMatrix);
@@ -453,21 +495,20 @@ Pixel drawSceneNode(SceneNode *root, Point p_eye, Vector ray, Matrix transformMa
 					// find normal of surface at intersect point
 					Vector n = shape->findIsectNormal(p_eye__object, ray__object, t_shape);
 
-					pixel.t = t_shape;
-					pixel.r = 100 + n[0] * 100;
-					pixel.g = 100 + n[1] * 100;
-					pixel.b = 100 + n[2] * 100;
+					intersection.t = t_shape;
+					intersection.isectNormal = n;
+					intersection.primitive = root->primitives[i];
 
 				}
 		}
 
 		int numChildren = root->children.size();
 		for (int i = 0; i < numChildren; i++) {
-		    Pixel child_pixel = drawSceneNode(root->children[i], p_eye, ray, transformMatrix);
-				if ((child_pixel.t >= 1) && (child_pixel.t <= far) && (child_pixel.t < pixel.t)) {
-					pixel = child_pixel;
+		    Intersection child_intersection = drawSceneNode(root->children[i], p_eye, ray, transformMatrix);
+				if ((child_intersection.t >= 1) && (child_intersection.t <= far) && (child_intersection.t < intersection.t)) {
+					intersection = child_intersection;
 				}
 		}
 
-		return pixel;
+		return intersection;
 }
