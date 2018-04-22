@@ -20,15 +20,15 @@
 
     <lightdata>
 	<id v="1"/>
-	<position x="4" y="0" z="5"/>
+	<position x="10" y="10" z="0"/>
 	<color r="0.3" g="0.3" b="0.3"/>
     </lightdata>
 
-    <lightdata>
+    <!-- <lightdata>
   <id v="1"/>
   <position x="-4" y="0" z="-1"/>
   <color r="1" g="0.3" b="0.3"/>
-    </lightdata>
+    </lightdata> -->
 
 
     <!-- <lightdata>

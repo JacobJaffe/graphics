@@ -26,7 +26,7 @@ typedef struct Intersection {
 
 Intersection drawSceneNode(SceneNode *root, Point p_eye, Vector ray,  Matrix transformMatrix);
 void setShape (ScenePrimitive *primitive);
-SceneColor getColor(Intersection intersection, Vector ray);
+SceneColor getColor(Intersection intersection, Vector ray, SceneNode* root);
 
 SceneColor getPixel(int x, int y);
 
@@ -369,10 +369,10 @@ SceneColor getPixel(int x, int y) {
 
 	intersection.point = p_eye + ray * intersection.t;
 
-	SceneColor p = getColor(intersection, ray);
+	SceneColor p = getColor(intersection, ray, root);
 	return p;
 }
-SceneColor getColor(Intersection intersection, Vector ray)
+SceneColor getColor(Intersection intersection, Vector ray, SceneNode* root)
 {
 	SceneColor p;
 	p.r = 0;
@@ -418,7 +418,28 @@ SceneColor getColor(Intersection intersection, Vector ray)
 			Vector N = intersection.isectNormal__world;
 			//N.normalize();
 			Vector L = sld.pos - intersection.point;
+
+			// wrong way?
+			Vector L2 = intersection.point - sld.pos;
+			L2.normalize();
+
 			L.normalize();
+
+			// SHADOW INTERSECTION
+			Matrix id_m = Matrix();
+			Intersection what_does_the_light_hit = drawSceneNode(root, sld.pos, L2, id_m);
+			if (what_does_the_light_hit.primitive != NULL) {
+				Point light_intersection = sld.pos + (L * what_does_the_light_hit.t);
+				Point check_intersection = Point(intersection.point);
+				Vector difference_v = light_intersection - check_intersection;
+				double diff_sum = difference_v[0] + difference_v[1] + difference_v[2];
+				diff_sum = abs(diff_sum);
+				if ( ((diff_sum) > 1) && (diff_sum < 20)) {
+					continue;
+				}
+			}
+			//
+
 			double difuse = sgd.kd * O_d.channels[j] * dot(N, L);
 
 			Vector R = L - (2 * dot(V, N) * N);
