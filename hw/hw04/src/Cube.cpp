@@ -9,6 +9,7 @@ const int Z = 2;
 
 using namespace std;
 
+bool isAboutEqual(double a, double b);
 
 double plane_intersect_front(Point p_eye, Vector ray)
 {
@@ -18,7 +19,7 @@ double plane_intersect_front(Point p_eye, Vector ray)
 	Point p = p_eye + (t_guess * ray);
 	if ((p[X] >= -0.5) && (p[X] <= 0.5)) {
 		if ((p[Y] >= -0.5) && (p[Y] <= 0.5)) {
-			if (t > 1) {
+			if (t >= (1 - EPSILON)) {
 				t = t_guess;
 			}
 		}
@@ -34,7 +35,7 @@ double plane_intersect_back(Point p_eye, Vector ray)
 	Point p = p_eye + (t_guess * ray);
 	if ((p[X] >= -0.5) && (p[X] <= 0.5)) {
 		if ((p[Y] >= -0.5) && (p[Y] <= 0.5)) {
-			if (t > 1) {
+			if (t >= 1) {
 				t = t_guess;
 			}
 		}
@@ -50,7 +51,7 @@ double plane_intersect_right(Point p_eye, Vector ray)
 	Point p = p_eye + (t_guess * ray);
 	if ((p[Z] >= -0.5) && (p[Z] <= 0.5)) {
 		if ((p[Y] >= -0.5) && (p[Y] <= 0.5)) {
-			if (t > 1) {
+			if (t >= 1) {
 				t = t_guess;
 			}
 		}
@@ -66,7 +67,7 @@ double plane_intersect_left(Point p_eye, Vector ray)
 	Point p = p_eye + (t_guess * ray);
 	if ((p[Z] >= -0.5) && (p[Z] <= 0.5)) {
 		if ((p[Y] >= -0.5) && (p[Y] <= 0.5)) {
-			if (t > 1) {
+			if (t >= 1) {
 				t = t_guess;
 			}
 		}
@@ -82,7 +83,7 @@ double plane_intersect_top(Point p_eye, Vector ray)
 	Point p = p_eye + (t_guess * ray);
 	if ((p[Z] >= -0.5) && (p[Z] <= 0.5)) {
 		if ((p[X] >= -0.5) && (p[X] <= 0.5)) {
-			if (t > 1) {
+			if (t >= 1) {
 				t = t_guess;
 			}
 		}
@@ -98,7 +99,7 @@ double plane_intersect_bot(Point p_eye, Vector ray)
 	Point p = p_eye + (t_guess * ray);
 	if ((p[Z] >= -0.5) && (p[Z] <= 0.5)) {
 		if ((p[X] >= -0.5) && (p[X] <= 0.5)) {
-			if (t > 1) {
+			if (t >= 1) {
 				t = t_guess;
 			}
 		}
@@ -121,6 +122,14 @@ double Cube::Intersect(Point p_eye, Vector ray, Matrix transformMatrix) {
   return min( min( min(t_front, t_back), min(t_right, t_left)), min(t_top, t_bot)) ;
 };
 
+bool isAboutEqual(double a, double b) {
+	double fake_epsilon = 0.01;
+	double c = (a - b);
+	c = c < 0 ? -c : c;
+	bool is_about_equal =  c < fake_epsilon;
+	return is_about_equal;
+}
+
 Vector Cube::findIsectNormal(Point p_eye, Vector ray, double dist)
 {
 
@@ -132,20 +141,20 @@ Vector Cube::findIsectNormal(Point p_eye, Vector ray, double dist)
   Point p = p_eye + (dist * ray);
 
   // TODO: this is grainy, becuase there is a slight epsillion rounding error.
-  if (p[X] == -0.5) {
+  if (isAboutEqual(p[X], -0.5)) {
     normal[X] = -1;
-  } else if (p[X] == 0.5) {
+  } else if (isAboutEqual(p[X], 0.5)) {
     normal[X] = 1;
-  } else if (p[Y] == -0.5) {
+	} else if (isAboutEqual(p[Y], -0.5)) {
     normal[Y] = -1;
-  } else if (p[Y] == 0.5) {
+	} else if (isAboutEqual(p[Y], 0.5)) {
     normal[Y] = 1;
-  } else if (p[Z] == -0.5) {
+	} else if (isAboutEqual(p[Z], -0.5)) {
     normal[Z] = -1;
-  } else if (p[Z] == 0.5) {
+	} else if (isAboutEqual(p[Z], 0.5)) {
     normal[Z] = 1;
   } else {
-    // std::cerr << "P: " << p[X] << ", " << p[Y] << ", " << p[Z] << std::endl;
+    //std::cerr << "P: " << p[X] << ", " << p[Y] << ", " << p[Z] << std::endl;
   }
 
   normal.normalize();

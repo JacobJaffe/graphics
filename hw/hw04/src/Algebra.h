@@ -578,7 +578,7 @@ inline Matrix scale_mat(const Vector& v) {
 	return m;
 };
 
-// Returns a translaion matrix, which will translate by the vector v 
+// Returns a translaion matrix, which will translate by the vector v
 inline Matrix trans_mat(const Vector& v) {
 	Matrix m(1, 0, 0, v[0],
 		0, 1, 0, v[1],
@@ -587,7 +587,7 @@ inline Matrix trans_mat(const Vector& v) {
 	return m;
 };
 
-// returns a rotation matrix effecting a rotation around the X axis by 
+// returns a rotation matrix effecting a rotation around the X axis by
 // specified radians
 inline Matrix rotX_mat(const double radians) {
 	double cos_r = cos(radians);
@@ -769,7 +769,7 @@ inline static void multRow(double* mat, int row, double mult)  {
 inline Matrix invert(const Matrix& matrix) {
 	// This does a Gauss-Jordan elimination.  Not fully tested.  May
 	// produce
-	// bizarre results if given non-invertible matrix, though 
+	// bizarre results if given non-invertible matrix, though
 	// behavior is just to return I.
 
 	double left[16];
@@ -783,7 +783,7 @@ inline Matrix invert(const Matrix& matrix) {
 
 	for (x = 0; x<4; x++) {
 		y = x + 1;
-		// Juxtapose things so that the current row (x) has a one in the 
+		// Juxtapose things so that the current row (x) has a one in the
 		// xth column.
 
 		while (fabs(left[x * 5]) < EPSILON) {

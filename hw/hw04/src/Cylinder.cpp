@@ -9,9 +9,18 @@ const int Z = 2;
 
 using namespace std;
 
+
+bool isAboooutEqual(double a, double b) {
+	double fake_epsilon = 0.01;
+	double c = (a - b);
+	c = c < 0 ? -c : c;
+	bool is_about_equal =  c < fake_epsilon;
+	return is_about_equal;
+}
+
 double checkCaps(Point eye, Vector ray) {
   double t_upperCap = (0.5 - eye[1]) / ray[1];
-  double t_lowerCap = (0.5 - eye[1]) / ray[1];
+  double t_lowerCap = (-0.5 - eye[1]) / ray[1];
 
   double t = DBL_MAX;
   double r = 0.5;
@@ -65,7 +74,6 @@ double Cylinder::Intersect(Point p_eye_world, Vector ray_world, Matrix transform
 
 Vector Cylinder::findIsectNormal(Point p_eye, Vector ray, double dist)
 {
-
   if (dist < 1) {
     std::cerr << "ERROR: findIsectNormal called but dist < 1" << std::endl;
   }
@@ -73,9 +81,20 @@ Vector Cylinder::findIsectNormal(Point p_eye, Vector ray, double dist)
   Vector normal = Vector(0, 0, 0);
   Point p = p_eye + (dist * ray);
 
-  Point p_origin;
-  normal = p - p_origin;
-
-  normal.normalize();
+  // cap lower
+  if (isAboooutEqual(p[Y], -0.5)) {
+    normal[Y] = -1;
+	}
+  // cap upper
+  else if (isAboooutEqual(p[Y], 0.5)) {
+    normal[Y] = 1;
+  }
+  // sides
+  else {
+    Point p_origin;
+    normal = p - p_origin;
+    normal[Y] = 0;
+    normal.normalize();
+  }
   return normal;
 }

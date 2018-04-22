@@ -14,25 +14,21 @@
 
 using namespace std;
 
-
-typedef struct Pixel {
-	double r;
-	double g;
-	double b;
-} Pixel;
-
 typedef struct Intersection {
 	double t;
 	ScenePrimitive *primitive;
-	Vector isectNormal;
+	Vector isectNormal__object;
+	Vector isectNormal__world;
 	Point point;
+	Vector ray__object;
+  Point p_eye__object;
 } Intersection;
 
 Intersection drawSceneNode(SceneNode *root, Point p_eye, Vector ray,  Matrix transformMatrix);
 void setShape (ScenePrimitive *primitive);
-Pixel getColor(Intersection intersection);
+SceneColor getColor(Intersection intersection, Vector ray);
 
-Pixel getPixel(int x, int y);
+SceneColor getPixel(int x, int y);
 
 /** These are the live variables passed into GLUI ***/
 int  isectOnly = 1;
@@ -47,6 +43,8 @@ float eyeZ = 2;
 float lookX = -2;
 float lookY = -2;
 float lookZ = -2;
+
+int SPECULAR_COMPONENT = 3;
 
 /** These are GLUI control panel objects ***/
 int  main_window;
@@ -98,7 +96,7 @@ void callback_start(int id) {
 
 	for (int i = 0; i < pixelWidth; i++) {
 		for (int j = 0; j < pixelHeight; j++) {
-			Pixel p = getPixel(i, j);
+			SceneColor p = getPixel(i, j);
 			setPixel(pixels, i, j, p.r * 255, p.g * 255, p.b * 255);
 		}
 	}
@@ -280,6 +278,7 @@ int main(int argc, char* argv[])
 	glui->add_button("Load", 0, callback_load);
 	glui->add_button("Start!", 0, callback_start);
 	glui->add_checkbox("Isect Only", &isectOnly);
+	glui->add_spinner("Specular Exponent", GLUI_SPINNER_INT, &SPECULAR_COMPONENT);
 
 	GLUI_Panel *camera_panel = glui->add_panel("Camera");
 	(new GLUI_Spinner(camera_panel, "RotateV:", &camRotV))
@@ -355,7 +354,7 @@ Vector generateRay(int x, int y) {
 	return ray;
 }
 
-Pixel getPixel(int x, int y) {
+SceneColor getPixel(int x, int y) {
 	SceneNode* root = parser->getRootNode();
 
 	Vector ray = generateRay(x, y);
@@ -370,13 +369,12 @@ Pixel getPixel(int x, int y) {
 
 	intersection.point = p_eye + ray * intersection.t;
 
-	Pixel p = getColor(intersection);
+	SceneColor p = getColor(intersection, ray);
 	return p;
 }
-
-Pixel getColor(Intersection intersection)
+SceneColor getColor(Intersection intersection, Vector ray)
 {
-	Pixel p;
+	SceneColor p;
 	p.r = 0;
 	p.g = 0;
 	p.b = 0;
@@ -384,6 +382,9 @@ Pixel getColor(Intersection intersection)
 	if (intersection.primitive == NULL) {
 		return p;
 	}
+
+	Vector V = Vector(ray);
+	V.normalize();
 
 	SceneGlobalData sgd;
 	if (!parser->getGlobalData(sgd)) {
@@ -393,27 +394,54 @@ Pixel getColor(Intersection intersection)
 	int num_lights = parser->getNumLights();
 	SceneColor O_a = intersection.primitive->material.cAmbient;
 	SceneColor O_d = intersection.primitive->material.cDiffuse;
-	SceneColor O_c = intersection.primitive->material.cSpecular;
+	SceneColor O_s = intersection.primitive->material.cSpecular;
 
-	// RED
-	// ambiant light of scene
-	p.r = sgd.ka * O_a.r;
 
-	for (int i = 0; i < num_lights; i++) {
-		SceneLightData sld;
-		if (!parser->getLightData(i, sld)) {
-			fprintf(stderr, "\nERROR: DID NOT GET LIGHT DATA FOR LIGHT: %d\n", i);
-			continue;
+	// iterate over our fancy union of colors
+	for (int j = 0; j < 3; j++) {
+
+		// ambiant light of scene
+		p.channels[j] = sgd.ka * O_a.channels[j];
+		// fprintf(stderr, "Scene Global Data Ambient: %f\n", sgd.ka);
+		// fprintf(stderr, "Object Ambient: %f\n", O_a);
+
+		// fprintf(stderr, "Scene Global Data Specular: %f\n", sgd.ks);
+		// fprintf(stderr, "Object Specular: %f\n", O_s.channels[j]);
+
+
+		for (int i = 0; i < num_lights; i++) {
+			SceneLightData sld;
+			if (!parser->getLightData(i, sld)) {
+				fprintf(stderr, "\nERROR: DID NOT GET LIGHT DATA FOR LIGHT: %d\n", i);
+				continue;
+			}
+			Vector N = intersection.isectNormal__world;
+			//N.normalize();
+			Vector L = sld.pos - intersection.point;
+			L.normalize();
+			double difuse = sgd.kd * O_d.channels[j] * dot(N, L);
+
+			Vector R = L - (2 * dot(V, N) * N);
+			R.normalize();
+
+			double foo = dot(V, R);
+			foo = abs(foo);
+			double specular = sgd.ks * O_s.channels[j] * pow(foo, SPECULAR_COMPONENT);
+			double intensity = sld.color.channels[j];
+			specular = specular < 0 ? 0 : specular;
+			difuse = difuse < 0 ? 0 : difuse;
+
+			p.channels[j] += intensity * (difuse + specular);
 		}
-		Vector N = intersection.isectNormal;
-		N.normalize();
-		Vector L = sld.pos - intersection.point;
-		L.normalize();
-		double difuse = sgd.kd * O_d.r * dot(N, L);
-		double specular = 0;
-		double intensity = sld.color.r;
+	}
 
-		p.r += intensity * (difuse + specular);
+	for (int i = 0; i < 3; i++) {
+		if (p.channels[i] > 1.0) {
+			p.channels[i] = 1.0;
+		}
+		if (p.channels[i] < 0) {
+		  p.channels[i] = 0.0;
+		}
 	}
 
 	return p;
@@ -429,7 +457,8 @@ void setShape (ScenePrimitive *primitive) {
 		shape = cylinder;
 		break;
 	case SHAPE_CONE:
-		shape = cone;
+	// TODO: fix
+		shape = cylinder;
 		break;
 	case SHAPE_SPHERE:
 		shape = sphere;
@@ -494,9 +523,13 @@ Intersection drawSceneNode(SceneNode *root, Point p_eye, Vector ray, Matrix tran
 
 					// find normal of surface at intersect point
 					Vector n = shape->findIsectNormal(p_eye__object, ray__object, t_shape);
+					Vector n_world = transformMatrix * n;
 
 					intersection.t = t_shape;
-					intersection.isectNormal = n;
+					intersection.isectNormal__object = n;
+					intersection.isectNormal__world = n_world;
+					intersection.ray__object = ray__object;
+					intersection.p_eye__object = p_eye__object;
 					intersection.primitive = root->primitives[i];
 
 				}

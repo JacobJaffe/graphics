@@ -15,9 +15,9 @@
 		<transblock>
 			<object type="primitive" name="sphere" >
 				<diffuse r="0" g="0" b="1"/>
+				<ambient r="0.5" g="0.5" b="0.5"/>
 			</object>
 		</transblock>
 	</object>
 
 </scenefile>
-
