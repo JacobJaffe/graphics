@@ -278,7 +278,6 @@ int main(int argc, char* argv[])
 	glui->add_button("Load", 0, callback_load);
 	glui->add_button("Start!", 0, callback_start);
 	glui->add_checkbox("Isect Only", &isectOnly);
-	glui->add_spinner("Specular Exponent", GLUI_SPINNER_INT, &SPECULAR_COMPONENT);
 
 	GLUI_Panel *camera_panel = glui->add_panel("Camera");
 	(new GLUI_Spinner(camera_panel, "RotateV:", &camRotV))
@@ -396,6 +395,7 @@ SceneColor getColor(Intersection intersection, Vector ray, SceneNode* root)
 	SceneColor O_d = intersection.primitive->material.cDiffuse;
 	SceneColor O_s = intersection.primitive->material.cSpecular;
 
+	float f = intersection.primitive->material.shininess;
 
 	// iterate over our fancy union of colors
 	for (int j = 0; j < 3; j++) {
@@ -447,7 +447,7 @@ SceneColor getColor(Intersection intersection, Vector ray, SceneNode* root)
 
 			double foo = dot(V, R);
 			foo = abs(foo);
-			double specular = sgd.ks * O_s.channels[j] * pow(foo, SPECULAR_COMPONENT);
+			double specular = sgd.ks * O_s.channels[j] * pow(foo, f);
 			double intensity = sld.color.channels[j];
 			specular = specular < 0 ? 0 : specular;
 			difuse = difuse < 0 ? 0 : difuse;

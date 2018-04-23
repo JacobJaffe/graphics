@@ -32,6 +32,7 @@ varying vec2 v_texcoord;
 // The base texture.
 uniform sampler2D u_texture;
 //TODO: pass in the bump map
+uniform sampler2D bmp_texture;
 //TODO: pass in the light location
 
 void main() {
@@ -96,6 +97,9 @@ function imgsLoaded(){
     var texcoordLocation = gl.getAttribLocation(shaderProgram, "a_texcoord");
     var textureLocation = gl.getUniformLocation(shaderProgram, "u_texture");
 
+    // brick
+    var bmp_texture = gl.getUniformLocation(shaderProgram, "bmp_texture");
+
 
     // Create a buffer for positions
     var positionBuffer = gl.createBuffer();
@@ -111,7 +115,7 @@ function imgsLoaded(){
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, brickImg);
     gl.generateMipmap(gl.TEXTURE_2D);
 
-    // gl.bindTexture(gl.TEXTURE_2D, 0);
+  //  gl.bindTexture(gl.TEXTURE_2D, 0);
 
     // load bump texture
     var bmpTexture = gl.createTexture();
@@ -119,7 +123,7 @@ function imgsLoaded(){
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bumpImg);
     gl.generateMipmap(gl.TEXTURE_2D);
 
-    // gl.bindTexture(gl.TEXTURE_2D, brickTexture);
+    gl.bindTexture(gl.TEXTURE_2D, brickTexture);
 
 
 
@@ -156,6 +160,9 @@ function imgsLoaded(){
     gl.bindTexture(gl.TEXTURE_2D, brickTexture);
     gl.uniform1i(textureLocation, 0);
 
+    gl.activeTexture(gl.TEXTURE0)
+    gl.bindTexture(gl.TEXTURE_2D, bmpTexture);
+    gl.uniform1i(bmp_texture, 0);
 
     // Render
     var primitiveType = gl.TRIANGLES;
