@@ -36,12 +36,12 @@ enum PrimitiveType {
 
 //! Enumeration for types of transformations that can be applied to objects, lights, and cameras.
 enum TransformationType {
-   TRANSFORMATION_TRANSLATE, TRANSFORMATION_SCALE, 
+   TRANSFORMATION_TRANSLATE, TRANSFORMATION_SCALE,
    TRANSFORMATION_ROTATE, TRANSFORMATION_MATRIX
 };
 
 //! Struct to store a RGBA color in floats [0,1]
-class SceneColor 
+class SceneColor
 {
 public:
     union {
@@ -59,7 +59,7 @@ public:
 };
 
 //! Scene global color coefficients
-class SceneGlobalData 
+class SceneGlobalData
 {
 public:
    float ka;  //! global ambient coefficient
@@ -69,7 +69,7 @@ public:
 };
 
 //! Data for a single light
-class SceneLightData 
+class SceneLightData
 {
 public:
    int id;
@@ -117,7 +117,7 @@ public:
 };
 
 //! Data for scene materials
-class SceneMaterial 
+class SceneMaterial
 {
 public:
    SceneColor cDiffuse;
@@ -190,4 +190,3 @@ public:
 };
 
 #endif
-

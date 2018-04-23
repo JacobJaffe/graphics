@@ -154,7 +154,7 @@ Vector Cube::findIsectNormal(Point p_eye, Vector ray, double dist)
 	} else if (isAboutEqual(p[Z], 0.5)) {
     normal[Z] = 1;
   } else {
-    //std::cerr << "P: " << p[X] << ", " << p[Y] << ", " << p[Z] << std::endl;
+    std::cerr << "P: " << p[X] << ", " << p[Y] << ", " << p[Z] << std::endl;
   }
 
   normal.normalize();

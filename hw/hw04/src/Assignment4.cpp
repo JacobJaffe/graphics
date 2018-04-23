@@ -19,14 +19,15 @@ typedef struct Intersection {
 	ScenePrimitive *primitive;
 	Vector isectNormal__object;
 	Vector isectNormal__world;
-	Point point;
+	Point point__world;
 	Vector ray__object;
   Point p_eye__object;
+	Point point__object;
 } Intersection;
 
 Intersection drawSceneNode(SceneNode *root, Point p_eye, Vector ray,  Matrix transformMatrix);
 void setShape (ScenePrimitive *primitive);
-SceneColor getColor(Intersection intersection, Vector ray, SceneNode* root);
+SceneColor getColor(Intersection intersection, Vector ray, SceneNode* root, int recursion_depth);
 
 SceneColor getPixel(int x, int y);
 
@@ -44,7 +45,7 @@ float lookX = -2;
 float lookY = -2;
 float lookZ = -2;
 
-int SPECULAR_COMPONENT = 3;
+int REFLECTIVE_RECURSION = 1;
 
 /** These are GLUI control panel objects ***/
 int  main_window;
@@ -278,6 +279,7 @@ int main(int argc, char* argv[])
 	glui->add_button("Load", 0, callback_load);
 	glui->add_button("Start!", 0, callback_start);
 	glui->add_checkbox("Isect Only", &isectOnly);
+	glui->add_spinner("Refletive Recursion", GLUI_SPINNER_INT, &REFLECTIVE_RECURSION);
 
 	GLUI_Panel *camera_panel = glui->add_panel("Camera");
 	(new GLUI_Spinner(camera_panel, "RotateV:", &camRotV))
@@ -365,20 +367,17 @@ SceneColor getPixel(int x, int y) {
 
 	Matrix transformMatrix = Matrix();
 	Intersection intersection = drawSceneNode(root, p_eye, ray, transformMatrix);
-
-	intersection.point = p_eye + ray * intersection.t;
-
-	SceneColor p = getColor(intersection, ray, root);
+	SceneColor p = getColor(intersection, ray, root, REFLECTIVE_RECURSION);
 	return p;
 }
-SceneColor getColor(Intersection intersection, Vector ray, SceneNode* root)
+SceneColor getColor(Intersection intersection, Vector ray, SceneNode* root, int recursion_depth)
 {
 	SceneColor p;
 	p.r = 0;
 	p.g = 0;
 	p.b = 0;
 
-	if (intersection.primitive == NULL) {
+	if ((intersection.primitive == NULL) || recursion_depth <= 0) {
 		return p;
 	}
 
@@ -394,43 +393,56 @@ SceneColor getColor(Intersection intersection, Vector ray, SceneNode* root)
 	SceneColor O_a = intersection.primitive->material.cAmbient;
 	SceneColor O_d = intersection.primitive->material.cDiffuse;
 	SceneColor O_s = intersection.primitive->material.cSpecular;
+	SceneColor O_r = intersection.primitive->material.cReflective;
 
 	float f = intersection.primitive->material.shininess;
+
+	Matrix id_m = Matrix();
+
+	// REFLECTIONN
+	Vector N = intersection.isectNormal__world;
+	Vector R = ray - (2 * dot(ray, N) * N);
+	Point intersection_p = Point(intersection.point__world);
+	Intersection recursive_intersection = drawSceneNode(root, intersection_p, R, id_m);
+	SceneColor recursive_color = getColor(recursive_intersection, R, root, recursion_depth - 1);
+
+
+	// calculate color of pixel on the texture map
+	double blend = 0; // intersection.primitive->material.blend;
+	SceneColor textureColor = SceneColor();
 
 	// iterate over our fancy union of colors
 	for (int j = 0; j < 3; j++) {
 
+		// blend the diffuse
+		O_d.channels[j] = (textureColor.channels[j] * blend) + (O_d.channels[j] * (1 - blend));
+
+
 		// ambiant light of scene
 		p.channels[j] = sgd.ka * O_a.channels[j];
-		// fprintf(stderr, "Scene Global Data Ambient: %f\n", sgd.ka);
-		// fprintf(stderr, "Object Ambient: %f\n", O_a);
+		p.channels[j] += sgd.ks * recursive_color.channels[j] * O_r.channels[j];
 
-		// fprintf(stderr, "Scene Global Data Specular: %f\n", sgd.ks);
-		// fprintf(stderr, "Object Specular: %f\n", O_s.channels[j]);
-
-
+		// LIGHTS
 		for (int i = 0; i < num_lights; i++) {
 			SceneLightData sld;
 			if (!parser->getLightData(i, sld)) {
 				fprintf(stderr, "\nERROR: DID NOT GET LIGHT DATA FOR LIGHT: %d\n", i);
 				continue;
 			}
-			Vector N = intersection.isectNormal__world;
 			//N.normalize();
-			Vector L = sld.pos - intersection.point;
+			Vector L = sld.pos - intersection.point__world;
 
 			// wrong way?
-			Vector L2 = intersection.point - sld.pos;
+			Vector L2 = intersection.point__world - sld.pos;
 			L2.normalize();
 
 			L.normalize();
 
 			// SHADOW INTERSECTION
-			Matrix id_m = Matrix();
 			Intersection what_does_the_light_hit = drawSceneNode(root, sld.pos, L2, id_m);
 			if (what_does_the_light_hit.primitive != NULL) {
 				Point light_intersection = sld.pos + (L * what_does_the_light_hit.t);
-				Point check_intersection = Point(intersection.point);
+				Point check_intersection = Point(intersection.point__world);
 				Vector difference_v = light_intersection - check_intersection;
 				double diff_sum = difference_v[0] + difference_v[1] + difference_v[2];
 				diff_sum = abs(diff_sum);
@@ -438,7 +450,6 @@ SceneColor getColor(Intersection intersection, Vector ray, SceneNode* root)
 					continue;
 				}
 			}
-			//
 
 			double difuse = sgd.kd * O_d.channels[j] * dot(N, L);
 
@@ -454,8 +465,11 @@ SceneColor getColor(Intersection intersection, Vector ray, SceneNode* root)
 
 			p.channels[j] += intensity * (difuse + specular);
 		}
+
 	}
 
+
+	// CROP VALues
 	for (int i = 0; i < 3; i++) {
 		if (p.channels[i] > 1.0) {
 			p.channels[i] = 1.0;
@@ -552,7 +566,8 @@ Intersection drawSceneNode(SceneNode *root, Point p_eye, Vector ray, Matrix tran
 					intersection.ray__object = ray__object;
 					intersection.p_eye__object = p_eye__object;
 					intersection.primitive = root->primitives[i];
-
+					intersection.point__world = p_eye + ray * intersection.t;
+					intersection.point__object = p_eye__object + ray__object * intersection.t;
 				}
 		}
 
