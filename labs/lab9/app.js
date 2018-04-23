@@ -111,6 +111,18 @@ function imgsLoaded(){
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, brickImg);
     gl.generateMipmap(gl.TEXTURE_2D);
 
+    // gl.bindTexture(gl.TEXTURE_2D, 0);
+
+    // load bump texture
+    var bmpTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, bmpTexture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, bumpImg);
+    gl.generateMipmap(gl.TEXTURE_2D);
+
+    // gl.bindTexture(gl.TEXTURE_2D, brickTexture);
+
+
+
     //set viewport size (map clipspace to worldspace)
     gl.viewport(0,0,500, 500);
     // The rest of the coordinates (verts) will be in clipspace (x,y: -1 ~ 1)
